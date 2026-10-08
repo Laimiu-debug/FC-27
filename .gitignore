@@ -1,0 +1,51 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Dependencies and caches
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated output
+/build/
+/dist/
+/out/
+/release/
+/releases/
+/logs/
+/tmp/
+/temp/
+*.log
+
+# Game files, personal saves, backups and local package inputs
+/game-files/
+/saves/
+/backups/
+/downloads/
+/local/
+*.zip
+*.7z
+*.rar
+*.exe
+*.msi
