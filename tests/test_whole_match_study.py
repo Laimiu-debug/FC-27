@@ -173,7 +173,9 @@ class RecipeStudyTests(unittest.TestCase):
                     name = "fifa/attribulator/gameplay/test0"
                     recipe = {"format": "fc27-whole-match-study-v1", "id": "test", "description": "test",
                               "modules": [{"id": "module", "title": "测试", "hypothesis": "待验证",
-                                           "assets": [{"name": name, "fields": ["Values", "Missing"] if invalid else ["Values"]}]}]}
+                                           "assets": [{"name": name, "fields": ["Values", "Missing"] if invalid else ["Values"]}]},
+                                          {"id": "unselected", "title": "未选择", "hypothesis": "待验证",
+                                           "assets": [{"name": "fifa/attribulator/gameplay/missing", "fields": ["Value"]}]}]}
                     recipe_path = root / "resources/test.json"
                     recipe_path.parent.mkdir()
                     recipe_path.write_text(json.dumps(recipe), encoding="utf-8")
@@ -186,7 +188,11 @@ class RecipeStudyTests(unittest.TestCase):
                             patch.object(STUDY, "read_sample", return_value=(SimpleNamespace(title="test"), [sample_asset])), \
                             patch.object(STUDY.Schemas, "from_sdk", return_value=schema), patch.object(STUDY, "SharedTypes") as factory:
                         factory.return_value.adapt.return_value = schema
-                        summary = STUDY.run(game, export, sample, sdk, shared, codec, recipe_path, output)
+                        summary = STUDY.run(game, export, sample, sdk, shared, codec, recipe_path, output, module="module")
+                    self.assertEqual(summary["modules_reviewed"], 1)
+                    self.assertEqual(summary["assets_requested"], 1)
+                    self.assertEqual(summary["selected_module"], "module")
+                    self.assertFalse((output / "plans/unselected.json").exists())
                     self.assertEqual(summary["assets_ready"], 0 if invalid else 1)
                     self.assertEqual(summary["assets_rejected"], 1 if invalid else 0)
                     self.assertEqual((output / "plans/combined.json").exists(), not invalid)

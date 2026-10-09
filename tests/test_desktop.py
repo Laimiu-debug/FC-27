@@ -53,6 +53,14 @@ class RuntimeTests(unittest.TestCase):
                 RUNTIME.validate_workspace(path)
             self.assertEqual(list(path.iterdir()), [])
 
+    def test_workspace_inside_game_is_rejected_even_with_workspace_markers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game = Path(directory)
+            (game / "FC27.exe").write_bytes(b"fixture")
+            workspace = make_workspace(game / "research")
+            with self.assertRaises(ValueError):
+                RUNTIME.validate_workspace(workspace)
+
     def test_source_mode_uses_repository_resources(self):
         with patch.object(RUNTIME, "_workspace", None), patch.object(sys, "frozen", False, create=True):
             self.assertEqual(RUNTIME.project_root(), ROOT)

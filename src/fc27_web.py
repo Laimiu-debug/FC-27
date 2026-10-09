@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import secrets
+import shutil
 import threading
 import time
 from urllib.parse import urlsplit
@@ -17,6 +18,12 @@ import fc27_manager as CLI
 from fc27_management import (MAX_JSON, UNVERIFIED, decode_json, identifier, json_bytes,
                              operation_lock, plain_path, project_local, read_bytes)
 from fc27_study import recipe_input, validate_recipe
+from fc27_progress import listen
+from fc27_jobs import JobStore
+from fc27_setup import DEFAULTS, FIELDS, configure, detect_games, readiness
+from fc27_diagnostics import GATES, report as diagnostic_report
+from fc27_version import VERSION
+from fc27_schema_cache import scoped
 
 
 ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
@@ -26,16 +33,16 @@ ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
 LABELS = {"refresh": "刷新工作区", "init": "初始化工作区", "register": "登记候选",
           "check": "离线预检", "build": "构建候选", "preview": "检查合并冲突",
           "compose": "合并重编译", "rehearse": "创建并应用副本", "status": "核对副本状态",
-          "restore": "还原副本"}
+          "restore": "还原副本", "setup": "配置研究工作区"}
 RULES = {"refresh": set(), "init": {"config"}, "register": {"id", "title", "bundle", "export", "package", "stage"},
          "check": {"id"}, "build": {"id", "title", "module"}, "preview": {"ids"},
          "compose": {"id", "title", "ids"}, "rehearse": {"id", "run"},
-         "status": {"run"}, "restore": {"run"}}
+         "status": {"run"}, "restore": {"run"}, "setup": set(FIELDS)}
 PHASES = {"refresh": "读取登记快照", "init": "创建项目内管理目录", "register": "核对候选并登记",
           "check": "重建检查版本、索引和载荷", "build": "研究、编译、打包并核对副本",
           "preview": "预检候选并比较修改计划", "compose": "合并计划、重编译并核对副本",
           "rehearse": "预检、备份并应用到项目副本", "status": "核对日志、备份和副本散列",
-          "restore": "核对备份并恢复项目副本"}
+          "restore": "核对备份并恢复项目副本", "setup": "保存本机配置并检查研究依赖"}
 
 
 def now() -> str:
@@ -78,6 +85,13 @@ class Application:
         self.token = secrets.token_urlsafe(32)
         self.guard = threading.Lock()
         self.jobs: list[dict] = []
+        self.store = JobStore(CLI.PROJECT_ROOT, self.root)
+        self.history_warnings = []
+        try:
+            self.jobs, self.history_warnings = self.store.load()
+        except Exception as exc:
+            self.history_warnings = ["任务历史暂不可读取：" + str(exc)]
+        self.detected_games = detect_games()
         self.busy = False
         self.closing = False
         self.desktop = False
@@ -89,8 +103,11 @@ class Application:
         hint = CLI.PROJECT_ROOT / "local/research/2026-10-08/notes/pipeline-config-v1.json"
         return {"workspace": {"ready": False, "root": str(self.root), "config": "", "game_root": "",
                               "config_hint": hint.relative_to(CLI.PROJECT_ROOT).as_posix() if hint.is_file() else "local/pipeline-config.json",
-                              "error": "", "build_error": "", "modules": [], "snapshot_at": now()},
-                "entries": [], "details": {}, "rehearsals": [], "warnings": [], "safety": dict(UNVERIFIED)}
+                              "error": "", "build_error": "", "modules": [], "snapshot_at": now(),
+                              "setup_values": {**DEFAULTS, "game_root": next(iter(self.detected_games), "")},
+                              "detected_games": self.detected_games, "readiness": None},
+                "entries": [], "details": {}, "rehearsals": [], "incomplete_builds": [],
+                "warnings": list(self.history_warnings), "gates": GATES, "version": VERSION, "safety": dict(UNVERIFIED)}
 
     def snapshot_for(self, manager: CLI.Manager) -> dict:
         result = self.empty_snapshot()
@@ -101,6 +118,8 @@ class Application:
             result["details"][entry["id"]] = detail
         try:
             config = decode_json(read_bytes(manager.config_path, MAX_JSON))
+            result["workspace"]["setup_values"] = config
+            result["workspace"]["readiness"] = readiness(CLI.PROJECT_ROOT, config)
             recipe = Path(config["recipe"])
             if not recipe.is_absolute():
                 recipe = CLI.PROJECT_ROOT / recipe
@@ -110,6 +129,19 @@ class Application:
                 {"id": m["id"], "title": m["title"]} for m in recipe["modules"]]
         except (OSError, ValueError, TypeError, KeyError) as exc:
             result["workspace"]["build_error"] = "研究方案无法读取：" + str(exc)
+        builds = manager.local(manager.root / "builds")
+        registered = {entry["id"] for entry in result["entries"]}
+        for path in sorted(builds.iterdir())[-50:]:
+            if path.name not in registered:
+                manager.local(path)
+                item = {"id": path.name, "path": str(path), "state": "未登记的输出，已保留"}
+                try:
+                    record = decode_json(read_bytes(plain_path(path, "pipeline-report.json"), MAX_JSON))
+                    item.update(state="离线流水线完成，登记未完成" if record.get("completed") else "流水线失败",
+                                stage=record.get("failed_stage", record.get("completed_stage", "")))
+                except (OSError, ValueError, TypeError):
+                    pass
+                result["incomplete_builds"].append(item)
         folder = manager.local(manager.root / "rehearsals")
         for path in sorted(folder.iterdir()):
             try:
@@ -162,6 +194,11 @@ class Application:
                     raise ValueError(workspace["build_error"])
                 if payload["module"] not in {m["id"] for m in workspace["modules"]}:
                     raise ValueError("所选模块不在当前研究方案中")
+                if workspace.get("readiness") and not workspace["readiness"]["inputs_present"]:
+                    raise ValueError("研究依赖尚未齐备，请在工作区设置中查看缺失项目")
+            if payload["action"] in ("build", "compose", "rehearse"):
+                if shutil.disk_usage(CLI.PROJECT_ROOT).free < 512 * 1024 * 1024:
+                    raise ValueError("工作区可用空间不足 512 MiB；请先释放空间，再生成候选或副本")
             if payload["action"] == "init" and self.root.exists():
                 raise ValueError("管理目录已经存在，不能重新初始化")
             job = {"id": secrets.token_hex(8), "action": payload["action"], "label": LABELS[payload["action"]],
@@ -169,10 +206,18 @@ class Application:
                    "state": "running", "phase": PHASES[payload["action"]], "started_at": now(),
                    "finished_at": None, "elapsed_seconds": None, "result": None, "error": "",
                    "events": [{"time": now(), "message": "任务开始：" + PHASES[payload["action"]]}]}
-            self.jobs = (self.jobs + [job])[-20:]
+            self.jobs = (self.jobs + [job])[-50:]
+            self.persist(job)
             self.busy = True
             self.worker = threading.Thread(target=self.execute, args=(payload, job), name="fc27-ui-operation", daemon=False)
-            self.worker.start()
+            try:
+                self.worker.start()
+            except Exception:
+                self.busy = False
+                self.worker = None
+                job.update(state="failed", phase="无法启动任务", finished_at=now(), error="后台线程启动失败", error_code="worker_start_failed")
+                self.persist(job)
+                raise
             return {"accepted": True, "job_id": job["id"]}
 
     def dispatch(self, manager: CLI.Manager, payload: dict) -> dict:
@@ -199,29 +244,72 @@ class Application:
             return manager.restore(payload["run"])
         raise ValueError("操作没有管理核心适配")
 
+    @scoped
     def execute(self, payload: dict, job: dict):
         started = time.monotonic()
         result, error, snapshot = None, "", None
         try:
-            if payload["action"] == "init":
-                result = CLI.initialize(self.root, Path(payload["config"]))
-                snapshot = self.read_snapshot()
-            else:
-                manager = CLI.Manager(self.root)
-                with operation_lock(manager.root):
-                    result = self.dispatch(manager, payload)
-                    snapshot = self.snapshot_for(manager)
+            def update(event):
+                with self.guard:
+                    job.update(phase=event["message"], stage=event["stage"], counts=event["counts"])
+                    job["events"] = (job["events"] + [{"time": now(), **event}])[-100:]
+                    self.persist(job)
+            with listen(update):
+                if payload["action"] == "init":
+                    result = CLI.initialize(self.root, Path(payload["config"]))
+                    snapshot = self.read_snapshot()
+                elif payload["action"] == "setup":
+                    if self.root.exists():
+                        with operation_lock(self.root):
+                            result = configure(CLI.PROJECT_ROOT, self.root, payload, CLI.initialize)
+                    else:
+                        result = configure(CLI.PROJECT_ROOT, self.root, payload, CLI.initialize)
+                    snapshot = self.read_snapshot()
+                else:
+                    manager = CLI.Manager(self.root)
+                    with operation_lock(manager.root):
+                        result = self.dispatch(manager, payload)
+                        snapshot = self.snapshot_for(manager)
         except Exception as exc:
             error = str(exc) or type(exc).__name__
-        if snapshot is None:
-            snapshot = self.read_snapshot()
+        finally:
+            if snapshot is None:
+                try:
+                    snapshot = self.read_snapshot()
+                except Exception as exc:
+                    error = (error + "；状态刷新失败：" + str(exc)).strip("；")
+            with self.guard:
+                if snapshot is not None:
+                    self.snapshot = snapshot
+                job.update(state="failed" if error else "succeeded", phase="操作失败" if error else "操作完成",
+                           finished_at=now(), elapsed_seconds=round(time.monotonic() - started, 2),
+                           result=result, error=error[:2000], error_code="operation_failed" if error else "",
+                           advice="查看工作区依赖与保留输出；构建重试使用新标识，恢复失败先核对备份和当前副本。" if error else "")
+                job["events"].append({"time": now(), "message": "失败：" + error[:2000] if error else "操作完成，游戏加载与比赛效果仍未验证"})
+                self.busy = False
+                self.persist(job)
+
+    def persist(self, job):
+        try:
+            self.store.save(job)
+        except Exception as exc:
+            message = "任务历史未保存：" + str(exc)
+            if message not in self.history_warnings:
+                self.history_warnings = (self.history_warnings + [message])[-10:]
+            job["history_error"] = "任务记录未能写入；当前操作状态仍可查看"
+
+    def diagnostics(self):
         with self.guard:
-            self.snapshot = snapshot
-            job.update(state="failed" if error else "succeeded", phase="操作失败" if error else "操作完成",
-                       finished_at=now(), elapsed_seconds=round(time.monotonic() - started, 2),
-                       result=result, error=error[:2000])
-            job["events"].append({"time": now(), "message": "失败：" + error[:2000] if error else "操作完成，游戏加载与比赛效果仍未验证"})
-            self.busy = False
+            snapshot, jobs = copy.deepcopy(self.snapshot), copy.deepcopy(self.jobs)
+        return diagnostic_report(snapshot, jobs, CLI.PROJECT_ROOT)
+
+    def export_diagnostics(self):
+        value = self.diagnostics()
+        path = project_local(CLI.PROJECT_ROOT / "local/diagnostics" / ("diagnostics-" + secrets.token_hex(8) + ".json"),
+                             CLI.PROJECT_ROOT, exists=False)
+        from fc27_management import write_new
+        write_new(path, json_bytes(value))
+        return {"report": value, "saved_path": str(path)}
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -282,7 +370,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             return
-        if self.path not in ("/api/jobs", "/api/exit"):
+        if self.path not in ("/api/jobs", "/api/exit", "/api/diagnostics"):
             self.reply(404, {"error": "操作接口不存在"})
             return
         token = self.headers.get("X-FC27-Token", "")
@@ -297,6 +385,11 @@ class Handler(BaseHTTPRequestHandler):
             if not 1 <= length <= 32768 or self.headers.get("Transfer-Encoding"):
                 raise ValueError("操作内容大小无效")
             payload = decode_json(self.rfile.read(length))
+            if self.path == "/api/diagnostics":
+                if payload != {}:
+                    raise ValueError("诊断导出不接受额外参数")
+                self.reply(200, self.server.app.export_diagnostics())
+                return
             if self.path == "/api/exit":
                 if payload != {} or not self.server.app.desktop or self.server.app.exit_callback is None:
                     raise ValueError("当前界面不支持桌面退出请求")

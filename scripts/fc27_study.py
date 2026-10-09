@@ -18,6 +18,8 @@ from fc27_riff import verify_ebx
 from fc27_schema import Schemas
 from fc27_sharedtypes import SharedTypes
 from fc27_reference import prepare_transfer
+from fc27_progress import emit
+from fc27_schema_cache import cached
 
 
 def recipe_input(path: Path) -> Path:
@@ -70,7 +72,8 @@ def json_bytes(value) -> bytes:
 
 
 def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Path,
-            shared_path: Path, codec_path: Path, recipe_path: Path) -> tuple[dict[str, bytes], dict]:
+            shared_path: Path, codec_path: Path, recipe_path: Path, module: str = "all") -> tuple[dict[str, bytes], dict]:
+    requested_module = module
     manifest_data = small_file(input_path(export_root, "manifest.json"))
     manifest = strict_json(manifest_data)
     sources = manifest.get("source_hashes", {})
@@ -83,6 +86,11 @@ def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Pat
     recipe_data = small_file(recipe_path)
     recipe = strict_json(recipe_data)
     validate_recipe(recipe)
+    if module != "all":
+        selected = [item for item in recipe["modules"] if item["id"] == module]
+        if not selected:
+            raise ValueError("所选模块不在明确研究方案中")
+        recipe = {**recipe, "modules": selected}
     sdk_data, shared_data, sample_data = map(small_file, (sdk_path, shared_path, sample_path))
     check_shared_source(shared_path, game_root, digest(shared_data))
     profile, references = read_sample(sample_data)
@@ -97,6 +105,7 @@ def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Pat
     originals, decoded, guids, total = {}, {}, set(), 0
     missing = {}
     for name in sorted(wanted):
+        emit("study", "读取资产：" + name.rsplit("/", 1)[-1], assets_total=len(wanted), assets_read=len(originals))
         if name not in records or name not in references:
             missing[name] = "缺少同名当前资产或已校验参考"
             continue
@@ -114,9 +123,11 @@ def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Pat
                 raise ValueError("资产不能逐字节往返")
             guids.update(t["guid"] for t in info["types"])
         originals[name], decoded[name] = current, reference
-    reference_schemas = Schemas.from_sdk(sdk_data, guids)
+    identity = (digest(sdk_data), digest(manifest_data), tuple(sorted(guids)))
+    reference_schemas = cached(("reference", *identity), lambda: Schemas.from_sdk(sdk_data, guids))
     # 与旧比较报告不同，这里不开放已知异常曲线的诊断读取策略。
-    current_schemas = SharedTypes(shared_data).adapt(sdk_data, guids)
+    current_schemas = cached(("current", digest(shared_data), *identity),
+                             lambda: SharedTypes(shared_data).adapt(sdk_data, guids))
     base = {"format": "fc27-fixed-edit-plan-v1", "export_manifest_sha256": digest(manifest_data),
             "sdk_sha256": digest(sdk_data), "shared_types_sha256": digest(shared_data)}
     files, modules, combined, total_edits, changed_bytes = {}, [], [], 0, 0
@@ -166,6 +177,7 @@ def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Pat
     if any(digest(small_file(input_path(game_root, rel))) != sha for rel, sha in sources.items()):
         raise ValueError("研究期间游戏索引改变")
     summary = {"tool": "fc27-offline-whole-match-study", "recipe_id": recipe["id"],
+               "selected_module": requested_module,
                "recipe_sha256": digest(recipe_data), "reference_package": profile.title,
                "reference_package_sha256": digest(sample_data), **base,
                "source_hashes": sources, "modules_reviewed": len(modules),
@@ -183,13 +195,13 @@ def prepare(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Pat
 
 
 def run(game_root: Path, export_root: Path, sample_path: Path, sdk_path: Path,
-        shared_path: Path, codec_path: Path, recipe_path: Path, output: Path) -> dict:
+        shared_path: Path, codec_path: Path, recipe_path: Path, output: Path, *, module: str = "all") -> dict:
     game_root = game_root.resolve(strict=True)
     export_root, sample_path, sdk_path, shared_path, codec_path = map(
         local_input, (export_root, sample_path, sdk_path, shared_path, codec_path))
     recipe_path = recipe_input(recipe_path)
     destination = output_path(output, game_root)
-    files, report = prepare(game_root, export_root, sample_path, sdk_path, shared_path, codec_path, recipe_path)
+    files, report = prepare(game_root, export_root, sample_path, sdk_path, shared_path, codec_path, recipe_path, module)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.mkdir()
     for name, raw in files.items():

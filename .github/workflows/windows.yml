@@ -1,0 +1,74 @@
+name: Windows offline checks and EXE
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13.16'
+          architecture: x64
+      - name: Validate version
+        id: version
+        shell: pwsh
+        run: |
+          $releaseVersion = python -c "import sys; sys.path.insert(0, 'src'); from fc27_version import VERSION; print(VERSION)"
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$releaseVersion") { throw 'Tag does not match version' }
+          "value=$releaseVersion" >> $env:GITHUB_OUTPUT
+      - name: Offline tests (no game or research inputs)
+        run: python -m unittest discover -s tests -v
+      - name: Build isolated runtime
+        shell: pwsh
+        run: |
+          python -m venv local/packaging/venv
+          & local/packaging/venv/Scripts/python.exe -m pip install --requirement resources/packaging/requirements-exe.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & local/packaging/venv/Scripts/python.exe scripts/build_fc27_exe.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: fc27-windows-${{ steps.version.outputs.value }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+            dist/FC27Manager/release-manifest.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: fc27-windows-${{ needs.build.outputs.version }}
+          path: release-assets
+      - name: Publish offline research prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          gh release create "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256 release-assets/FC27Manager/release-manifest.json --verify-tag --prerelease --title "FC27 管理器 $RELEASE_TAG · 离线研究版" --notes-file docs/release-notes.md

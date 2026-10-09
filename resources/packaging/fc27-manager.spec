@@ -16,6 +16,8 @@ a = Analysis(
     pathex=[str(ROOT / 'src'), str(ROOT / 'scripts')],
     binaries=[],
     datas=[(str(ROOT / 'resources/ui'), 'resources/ui'),
+           (str(ROOT / 'resources/whole-match-study.json'), 'resources'),
+           (str(ROOT / 'resources/pipeline-config.example.json'), 'resources'),
            (str(licenses), 'licenses')],
     hiddenimports=['webview.platforms.winforms', 'webview.platforms.edgechromium'],
     hookspath=[], hooksconfig={}, runtime_hooks=[],
@@ -38,7 +40,8 @@ for kind, items in [('module', a.pure), ('binary', a.binaries), ('data', a.datas
             continue
         path = Path(source).resolve(strict=True)
         generated_library = kind == 'data' and name == 'base_library.zip' and path == audit.parent / 'fc27-manager/base_library.zip'
-        if not generated_library and not any(path.is_relative_to(base.resolve()) for base in approved):
+        public_template = path in {ROOT / 'resources/whole-match-study.json', ROOT / 'resources/pipeline-config.example.json'}
+        if not generated_library and not public_template and not any(path.is_relative_to(base.resolve()) for base in approved):
             raise ValueError('未经批准的打包输入：' + name)
         collected.append({'name': name, 'kind': kind, 'source': str(path), 'type': tag})
 audit.write_text(json.dumps(collected, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
@@ -47,5 +50,5 @@ pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='FC27Manager',
           debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
           console=False, disable_windowed_traceback=False, icon='NONE',
-          version=str(ROOT / 'resources/packaging/version-info.txt'),
+          version=os.environ['FC27_BUILD_VERSION_INFO'],
           uac_admin=False, uac_uiaccess=False)

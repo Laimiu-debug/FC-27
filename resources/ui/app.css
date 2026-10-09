@@ -1413,3 +1413,8 @@ dialog::backdrop {
     gap:32px
   }
 }
+/* 首次配置与离线证据清单 */
+.setup-columns { margin-top: 24px; }
+.dependency-row { padding: 12px 0; border-bottom: 1px solid var(--border, #293c34); }
+.dependency-row p { margin: 6px 0 0; line-height: 1.65; overflow-wrap: anywhere; }
+#incomplete-builds p { white-space: pre-wrap; overflow-wrap: anywhere; }

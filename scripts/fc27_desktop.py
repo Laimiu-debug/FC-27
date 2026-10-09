@@ -18,16 +18,30 @@ if not getattr(sys, "frozen", False):
     sys.path.insert(0, str(source / "scripts"))
 
 from fc27_runtime import VERSION, configure_workspace, discover_workspace, project_root, resource_root
+from fc27_setup import create_workspace
+from fc27_workspace_preferences import last_workspace, remember_workspace
 
 
 def choose_workspace() -> Path | None:
     import tkinter as tk
-    from tkinter import filedialog
+    from tkinter import filedialog, messagebox
     root = tk.Tk()
     root.withdraw()
     try:
-        folder = filedialog.askdirectory(parent=root, title="选择 FC27 研究项目目录（包含 resources 和 local）", mustexist=True)
-        return Path(folder) if folder else None
+        existing = messagebox.askyesnocancel("FC27 首次启动", "已有研究工作区吗？\n\n是：连接已有目录\n否：创建新的离线工作区\n取消：退出", parent=root)
+        if existing is None:
+            return None
+        folder = filedialog.askdirectory(parent=root, title="选择已有工作区" if existing else "选择新工作区的存放位置", mustexist=True)
+        if not folder:
+            return None
+        path = Path(folder)
+        if existing:
+            if (path / "resources/whole-match-study.json").is_file() and not (path / "local").exists():
+                from fc27_setup import no_links
+                no_links(path)
+                (path / "local").mkdir()
+            return path
+        return create_workspace(path / "FC27-workspace")
     finally:
         root.destroy()
 
@@ -104,10 +118,15 @@ def main() -> int:
     workspace = args.workspace
     if workspace is None:
         executable = Path(sys.executable) if getattr(sys, "frozen", False) else Path(__file__)
-        workspace = discover_workspace(executable) or choose_workspace()
+        workspace = discover_workspace(executable) or last_workspace() or choose_workspace()
     if workspace is None:
         return 0
     configure_workspace(workspace)
+    if not args.smoke_test:
+        try:
+            remember_workspace(workspace)
+        except OSError:
+            pass
 
     # 必须先绑定外部工作区，再导入各个编译/验证脚本中的路径常量。
     from fc27_desktop_session import DesktopSession
@@ -161,5 +180,5 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        show_error("无法打开管理器：" + str(exc) + "\n\n请确认已选择研究项目目录，并已安装 Microsoft Edge WebView2。")
+        show_error("无法打开管理器：" + str(exc) + "\n\n工作区错误请重新选择目录；窗口引擎错误请检查 WebView2 与 .NET。\n游戏无需启动。")
         raise SystemExit(1)

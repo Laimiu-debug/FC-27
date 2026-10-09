@@ -18,6 +18,7 @@ from fc27_edit import MAX_EDITS, edit_values
 from fc27_export import MAX_EXPORT_BYTES, output_path
 from fc27_riff import verify_ebx
 from fc27_sharedtypes import SharedTypes
+from fc27_schema_cache import cached
 
 
 SOURCE_FILES = {"Data/layout.toc", "Patch/layout.toc",
@@ -132,7 +133,8 @@ def run(game_root: Path, export_root: Path, sdk_path: Path, shared_path: Path,
         if total_edits > MAX_EDITS:
             raise ValueError("单次计划的编辑项超过上限")
         prepared.append((entry, original))
-    schemas = SharedTypes(shared_data).adapt(sdk_data, guids)
+    schemas = cached(("current", digest(shared_data), digest(sdk_data), digest(manifest_data), tuple(sorted(guids))),
+                     lambda: SharedTypes(shared_data).adapt(sdk_data, guids))
     built = []
     for entry, original in prepared:
         candidate, report = edit_values(original, schemas, entry["expected_sha256"], entry["edits"], entry["root_identity"])

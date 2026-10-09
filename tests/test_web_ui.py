@@ -254,6 +254,19 @@ class HttpTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             WEB.LocalServer(("0.0.0.0", 0), self.app, ROOT / "resources/ui")
 
+    def test_diagnostic_export_requires_session_token_and_has_no_private_workspace_fields(self):
+        headers = {"Content-Type": "application/json", "X-FC27-Token": self.app.token,
+                   "Origin": self.server.origin}
+        self.assertEqual(self.request("POST", "/api/diagnostics", b"{}", {"Content-Type": "application/json"})[0], 403)
+        self.assertEqual(self.request("POST", "/api/diagnostics", b'{"path":"elsewhere"}', headers)[0], 400)
+        status, _, raw = self.request("POST", "/api/diagnostics", b"{}", headers)
+        self.assertEqual(status, 200)
+        value = json.loads(raw)
+        self.assertNotIn(self.app.token, json.dumps(value["report"]))
+        self.assertNotIn(str(self.app.root), json.dumps(value["report"]))
+        self.assertFalse(value["report"]["loadable_mod"])
+        self.assertTrue(Path(value["saved_path"]).is_file())
+
     def exit_request(self, body=b"{}", extra=None):
         headers = {"Content-Type": "application/json", "X-FC27-Token": self.app.token,
                    "Origin": self.server.origin}

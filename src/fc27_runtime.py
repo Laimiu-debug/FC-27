@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+from fc27_version import VERSION
 
 
 _workspace: Path | None = None
-VERSION = "0.1.0"
 
 
 def resource_root() -> Path:
@@ -17,7 +17,13 @@ def resource_root() -> Path:
 
 
 def validate_workspace(path: Path) -> Path:
+    for current in (path, *path.parents):
+        if current.is_symlink() or current.is_junction():
+            raise ValueError("工作区路径不能经过目录链接")
     path = path.resolve(strict=True)
+    if any((parent / "FC27.exe").exists() or (parent / "Data/layout.toc").exists()
+           for parent in (path, *path.parents)):
+        raise ValueError("研究工作区不能位于游戏安装目录")
     if not path.is_dir() or not (path / "resources/whole-match-study.json").is_file():
         raise ValueError("请选择包含 resources/whole-match-study.json 的 FC27 研究项目目录")
     local = path / "local"

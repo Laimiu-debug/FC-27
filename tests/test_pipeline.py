@@ -24,7 +24,7 @@ class PipelineTests(unittest.TestCase):
                 "shared_types": root / "local/shared", "codec": root / "local/codec"}
 
     @staticmethod
-    def study(*args):
+    def study(*args, **kwargs):
         output = args[-1]
         (output / "plans").mkdir(parents=True)
         (output / "plans/combined.json").write_text("{}")
@@ -49,9 +49,10 @@ class PipelineTests(unittest.TestCase):
             config = self.config(root)
             output = root / "local/pipeline"
             calls = []
-            def checked_study(*args):
+            def checked_study(*args, **kwargs):
                 calls.append("study")
-                return self.study(*args)
+                self.assertEqual(kwargs["module"], "transitions")
+                return self.study(*args, **kwargs)
             def checked_build(*args):
                 calls.append("build")
                 self.assertEqual(args[-2].name, "transitions.json")
@@ -97,7 +98,7 @@ class PipelineTests(unittest.TestCase):
             root = Path(temporary)
             config = self.config(root)
             output = root / "local/pipeline"
-            def rejected_study(*args):
+            def rejected_study(*args, **kwargs):
                 result = self.study(*args)
                 (args[-1] / "study-report.json").write_text(json.dumps({"modules": [
                     {"id": "transitions", "assets_rejected": 1, "assets_ready": 1}]}))

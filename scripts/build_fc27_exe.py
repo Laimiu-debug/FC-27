@@ -19,6 +19,8 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from fc27_version import VERSION
 WEBVIEW_SDK = "1.0.3856.49"
 NUGet_URL = ("https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/" + WEBVIEW_SDK +
              "/microsoft.web.webview2." + WEBVIEW_SDK + ".nupkg")
@@ -95,10 +97,16 @@ def main() -> int:
     if Path(sys.prefix).resolve() != (ROOT / "local/packaging/venv").resolve():
         raise ValueError("请使用项目 local/packaging/venv 的 Python")
     output = output_folder(args.output)
+    archive_path = output.parent / ("FC27Manager-" + VERSION + "-win-x64.zip")
+    if archive_path.exists():
+        raise FileExistsError("发行 ZIP 已存在，不覆盖：" + str(archive_path))
     stamp = uuid.uuid4().hex
     work = ROOT / "build" / ("fc27-exe-" + stamp)
     licenses = ROOT / "local/packaging" / ("licenses-" + stamp)
     work.mkdir(parents=True)
+    version_info = work / "version-info.txt"
+    version_info.write_text((ROOT / "resources/packaging/version-info.txt").read_text(encoding="utf-8")
+                            .replace("@VERSION@", VERSION).replace("@VERSION_TUPLE@", ", ".join(VERSION.split(".") + ["0"])), encoding="utf-8")
     versions = collect_licenses(licenses)
     locked = {}
     for line in (ROOT / "resources/packaging/requirements-exe.txt").read_text(encoding="utf-8").splitlines():
@@ -109,7 +117,8 @@ def main() -> int:
         if metadata.version(name) != version:
             raise ValueError("构建依赖与锁定文件不同：" + name)
     audit = work / "bundle-audit.json"
-    environment = dict(os.environ, FC27_BUILD_LICENSES=str(licenses), FC27_BUILD_AUDIT=str(audit))
+    environment = dict(os.environ, FC27_BUILD_LICENSES=str(licenses), FC27_BUILD_AUDIT=str(audit),
+                       FC27_BUILD_VERSION_INFO=str(version_info))
     # 不继承其他桌面工具注入的 DLL 搜索目录，避免夹带无关运行库。
     windows = Path(os.environ["SystemRoot"])
     environment["PATH"] = os.pathsep.join(str(p) for p in (
@@ -125,22 +134,35 @@ def main() -> int:
         raise ValueError("输出不是 Windows 可执行文件")
     shutil.copytree(licenses, output / "licenses")
     (output / "使用说明.txt").write_text(
-        "FC27 玩法模组管理器 0.1.0 · 离线研究版\n\n"
+        f"FC27 玩法模组管理器 {VERSION} · 离线研究版\n\n"
         "双击 FC27Manager.exe，自动使用所在项目的研究工作区。\n"
-        "移到其他位置时，请选择包含 resources 和 local 的原项目目录。\n"
+        "首次启动可连接已有目录或创建新工作区，再按界面向导提供本机研究资料。\n"
         "EXE 已包含 Python 与前端，运行无需安装 Python。\n"
         "系统需要 Microsoft Edge WebView2 和 .NET Framework 4.6.2 或更新版。\n"
         "本机候选、配置和备份仍在外部项目 local，EXE 不含游戏或研究素材。\n"
         "点击退出管理器或关闭窗口，会等待当前操作结束。\n"
         "工具不启动游戏、不安装模组；实际加载和比赛效果未验证。\n"
         "第三方许可见 licenses 文件夹，EXE 内也保留同一份许可。\n", encoding="utf-8")
-    manifest = {"format": "fc27-exe-release-v1", "version": "0.1.0", "architecture": "windows-x64",
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip())
+    manifest = {"format": "fc27-exe-release-v1", "version": VERSION, "architecture": "windows-x64",
+                "source_commit": commit, "source_dirty": dirty,
                 "created_at": datetime.now(timezone.utc).isoformat(), "python": platform.python_version(),
                 "build_packages": versions, "exe": {"file": executable.name, "bytes": executable.stat().st_size,
                 "sha256": sha(executable)}, "bundled_input_count": len(json.loads(audit.read_text(encoding="utf-8"))),
                 "webview_sdk": WEBVIEW_SDK, "game_files_bundled": False, "research_inputs_bundled": False,
                 "game_files_written": False, "game_started_by_tool": False, "gameplay_effect_verified": False}
     (output / "release-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with zipfile.ZipFile(archive_path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(output.rglob("*")):
+            if path.is_file():
+                archive.write(path, "FC27Manager/" + path.relative_to(output).as_posix())
+    with zipfile.ZipFile(archive_path) as archive:
+        if archive.testzip() is not None or hashlib.sha256(archive.read("FC27Manager/FC27Manager.exe")).hexdigest() != sha(executable):
+            raise ValueError("发行 ZIP 校验失败")
+    checksum = output.parent / (archive_path.name + ".sha256")
+    with checksum.open("x", encoding="ascii") as stream:
+        stream.write(sha(archive_path) + "  " + archive_path.name + "\n")
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
     return 0
 

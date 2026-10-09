@@ -1,13 +1,13 @@
 VSVersionInfo(
-  ffi=FixedFileInfo(filevers=(0, 1, 0, 0), prodvers=(0, 1, 0, 0), mask=0x3f,
+  ffi=FixedFileInfo(filevers=(@VERSION_TUPLE@), prodvers=(@VERSION_TUPLE@), mask=0x3f,
                    flags=0, OS=0x40004, fileType=0x1, subtype=0, date=(0, 0)),
   kids=[StringFileInfo([StringTable('080404B0', [
     StringStruct('CompanyName', 'FC27 Career Lab'),
     StringStruct('FileDescription', 'FC27 玩法模组管理器（离线研究版）'),
-    StringStruct('FileVersion', '0.1.0'),
+    StringStruct('FileVersion', '@VERSION@'),
     StringStruct('InternalName', 'FC27Manager'),
     StringStruct('OriginalFilename', 'FC27Manager.exe'),
     StringStruct('ProductName', 'FC27 玩法模组管理器'),
-    StringStruct('ProductVersion', '0.1.0')
+    StringStruct('ProductVersion', '@VERSION@')
   ])]), VarFileInfo([VarStruct('Translation', [2052, 1200])])]
 )

@@ -6,8 +6,11 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 from fc27_build import PROJECT_ROOT, local_input, run as build, strict_json
+from fc27_progress import emit
+from fc27_schema_cache import scoped, stats as cache_stats
 from fc27_assets import small_file
 from fc27_export import output_path
 from fc27_package import run as package
@@ -39,6 +42,7 @@ def load_config(path: Path) -> dict[str, Path]:
     return paths
 
 
+@scoped
 def run(config_path: Path, output: Path, module: str = "all", profile: str = "FC27",
         with_loader_stage: bool = False) -> dict:
     config = load_config(config_path)
@@ -51,32 +55,42 @@ def run(config_path: Path, output: Path, module: str = "all", profile: str = "FC
         raise ValueError("所选模块不在明确研究方案中")
     stage = "study"
     result = {"tool": "fc27-offline-pipeline", "module": module, "completed": False,
+              "stage_seconds": {},
               "loadable_mod": False, "game_started_by_tool": False,
               "game_files_written": False, "gameplay_effect_verified": False}
+    started = time.monotonic()
+    def enter(next_stage):
+        nonlocal stage, started
+        result["stage_seconds"][stage] = round(time.monotonic() - started, 3)
+        stage, started = next_stage, time.monotonic()
+        emit(stage)
     try:
+        emit(stage)
         result["study"] = study(game, export, config["sample"], config["sdk"], config["shared_types"],
-                                 config["codec"], config["recipe"], destination / "study")
+                                 config["codec"], config["recipe"], destination / "study", module=module)
         review = strict_json(small_file(destination / "study/study-report.json"))
         selected = review["modules"] if module == "all" else [m for m in review["modules"] if m["id"] == module]
-        if any(m["assets_rejected"] or not m["assets_ready"] for m in selected):
+        if not selected or any(m["assets_rejected"] or not m["assets_ready"] for m in selected):
             raise ValueError("所选模块存在不兼容资产或没有实际改动，已留研究报告，停止编译")
-        stage = "build"
+        enter("build")
         plan = destination / "study/plans" / ("combined.json" if module == "all" else module + ".json")
         result["build"] = build(game, export, config["sdk"], config["shared_types"], plan, destination / "built")
-        stage = "package"
+        enter("package")
         result["package"] = package(game, destination / "built", export, destination / "packaged", profile)
-        stage = "verify"
+        enter("verify")
         result["verification"] = verify(game, destination / "built", export, destination / "packaged")
         if with_loader_stage:
-            stage = "loader-stage"
+            enter("loader-stage")
             result["loader_stage"] = stage_loader(game, destination / "built", export,
                                                    destination / "packaged", destination / "loader-stage")
-            stage = "verify-loader-stage"
+            enter("verify-loader-stage")
             result["loader_stage_verification"] = verify_loader_stage(
                 game, destination / "built", export, destination / "packaged", destination / "loader-stage")
-        result.update(completed=True, completed_stage=stage)
+        result["stage_seconds"][stage] = round(time.monotonic() - started, 3)
+        result.update(completed=True, completed_stage=stage, schema_cache=cache_stats())
     except (OSError, ValueError, KeyError, TypeError, OverflowError) as exc:
         result.update(failed_stage=stage, reason=str(exc))
+        result["stage_seconds"][stage] = round(time.monotonic() - started, 3)
         if destination.is_dir():
             write_report(destination, result)
         raise
@@ -86,6 +100,8 @@ def run(config_path: Path, output: Path, module: str = "all", profile: str = "FC
             "changed_bytes": result["build"]["changed_bytes"],
             "files_verified": result["verification"]["files_verified"],
             "loader_staged": with_loader_stage,
+            "stage_seconds": result["stage_seconds"],
+            "schema_cache": result["schema_cache"],
             "loadable_mod": False, "game_started_by_tool": False,
             "game_files_written": False, "gameplay_effect_verified": False}
 

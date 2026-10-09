@@ -67,7 +67,10 @@ function updateControls() {
   $("#open-register").disabled = busy() || !ready;
   $$("form button[type=submit]").forEach(node => { node.disabled = busy() || !ready; });
   $("#init-form button[type=submit]").disabled = busy() || ready || Boolean(data?.workspace.error);
+  $("#setup-form button[type=submit]").disabled = busy() || Boolean(data?.workspace.error);
+  $("#export-diagnostics").disabled = !connected || Boolean(data?.closing);
   $("#build-form button[type=submit]").disabled = busy() || !ready || Boolean(data?.workspace.build_error);
+  if (data?.workspace.readiness && !data.workspace.readiness.inputs_present) $("#build-form button[type=submit]").disabled = true;
   $("#compose-submit").disabled = busy() || !ready || !currentPreview()?.plans_mergeable;
   $$(".check-button,.status-button").forEach(node => { node.disabled = busy() || !ready; });
   $$(".restore-button").forEach(node => { node.disabled = busy() || !ready || node.dataset.restored === "true"; });
@@ -257,7 +260,51 @@ function renderSettings() {
   if (message) alert.append(element("span", "", message), button("查看设置 →", "subtle", () => go("settings")));
   const warnings = $("#warning-area");
   warnings.replaceChildren(...data.warnings.map(message => element("div", "notice warning", message)));
+  renderSetup();
   updateControls();
+}
+
+function renderSetup() {
+  const workspace = data.workspace;
+  const form = $("#setup-form");
+  if (!form.dataset.loaded) {
+    const titles = {game_root: "游戏目录 · 只读", fc27_export: "已校验的 FC27 导出目录", sample: "前代玩法参考包", sdk: "静态 SDK", shared_types: "本机共享类型描述", codec: "已校验的解压依赖"};
+    const fields = $("#setup-fields");
+    fields.replaceChildren();
+    Object.entries(titles).forEach(([name, title]) => {
+      const label = element("label", "", title);
+      const input = element("input");
+      input.name = name; input.required = true; input.maxLength = 2048;
+      input.value = workspace.setup_values[name] || "";
+      if (name === "game_root") { input.setAttribute("list", "detected-games"); input.placeholder = "选择检测到的目录或填写路径"; }
+      label.append(input); fields.append(label);
+    });
+    $("#detected-games").replaceChildren(...workspace.detected_games.map(path => {
+      const option = element("option"); option.value = path; return option;
+    }));
+    form.dataset.loaded = "true";
+  }
+  const dependencies = $("#dependency-list");
+  dependencies.replaceChildren();
+  if (!workspace.readiness) dependencies.append(element("p", "muted", "保存配置后会逐项显示检查结果。"));
+  else workspace.readiness.checks.forEach(check => {
+    const row = element("div", "dependency-row");
+    row.append(element("strong", check.ready ? "accent" : "", (check.ready ? "✓ " : "○ ") + check.title), element("p", "muted", check.message));
+    dependencies.append(row);
+  });
+  const incomplete = $("#incomplete-builds");
+  incomplete.replaceChildren();
+  if (data.incomplete_builds.length) {
+    incomplete.append(element("h3", "", "保留的未登记输出"));
+    data.incomplete_builds.forEach(item => incomplete.append(element("p", "form-footnote", item.id + " · " + item.state + (item.stage ? " · " + item.stage : "") + "\n" + item.path)));
+    incomplete.append(element("p", "form-note", "旧输出不会覆盖。查看报告后，重试请使用新的候选标识。"));
+  }
+  $("#loader-gates").replaceChildren(...data.gates.map(gate => {
+    const row = element("div", "dependency-row");
+    const status = {unverified: "待验证", missing: "缺少资料", deferred: "等待实机授权", not_covered: "尚未覆盖"}[gate.status];
+    row.append(element("strong", "", gate.title + " · " + status), element("p", "muted", gate.next));
+    return row;
+  }));
 }
 
 function openDetail(id) {
@@ -299,6 +346,8 @@ function jobSummary(job) {
   const result = job.result;
   if (job.error) return job.error;
   if (!result) return job.phase;
+  if (result.history_result_omitted) return result.reason;
+  if (job.action === "setup") return result.readiness.inputs_present ? "配置已保存，研究输入已找到；完整基线将在构建时核对。" : "配置已保存，请根据依赖清单补齐研究资料。";
   if (job.action === "check") return "离线预检通过：" + number(result.assets_built) + " 份资产、" + number(result.changed_values) + " 项修改；检查 " + number(result.bundle_locations_checked) + " 个位置。";
   if (["build", "compose", "register"].includes(job.action)) return "已登记「" + result.title + "」：" + number(result.assets_built) + " 份资产、" + number(result.changed_values) + " 项修改、" + number(result.changed_bytes) + " 个变更字节。";
   if (job.action === "preview") return result.plans_mergeable ? "修改计划可合并；" + Object.keys(result.shared_output_paths).length + " 个共同输出路径将统一重建。" : "计划冲突：" + result.conflict;
@@ -310,6 +359,7 @@ function jobSummary(job) {
 
 function updateJobFacts() {
   for (const job of data.jobs) {
+    if (job.historical) continue;
     if (job.action === "check") {
       if (job.state === "succeeded") checks.set(job.subject, job.finished_at);
       else checks.delete(job.subject);
@@ -331,20 +381,25 @@ function renderJobs() {
   const jobs = data.jobs;
   const active = jobs.find(job => job.state === "running");
   const last = jobs.at(-1);
-  $("#task-title").textContent = active ? active.label : "本次会话任务";
-  $("#task-summary").textContent = active ? "后台执行中，页面可以继续浏览" : (jobs.length ? jobs.length + " 项任务 · " + (last.state === "failed" ? "最近一次失败" : "最近一次完成") : "尚无任务");
+  $("#task-title").textContent = active ? active.label : "任务与历史";
+  $("#task-summary").textContent = active ? "后台执行中，页面可以继续浏览" : (jobs.length ? jobs.length + " 项任务 · " + (last.state === "failed" ? "最近一次失败" : last.state === "interrupted" ? "上次任务中断" : "最近一次完成") : "尚无任务");
   $("#task-indicator").classList.toggle("busy", Boolean(active));
   $("#task-indicator").classList.toggle("failed", last?.state === "failed");
   $("#task-live").classList.toggle("hidden", !active);
-  if (active) $("#task-phase").textContent = active.phase;
+  if (active) {
+    const count = active.counts || {};
+    $("#task-phase").textContent = active.phase + (count.assets_total ? " · 已读 " + count.assets_read + " / " + count.assets_total + " 份资产" : "");
+  }
   const history = $("#task-history");
   history.replaceChildren();
   jobs.slice().reverse().forEach(job => {
     const record = element("article", "job-record");
     const top = element("div", "job-top");
-    const text = job.state === "running" ? "进行中" : job.state === "failed" ? "失败" : "完成";
+    const text = (job.state === "running" ? "进行中" : job.state === "failed" ? "失败" : job.state === "interrupted" ? "已中断" : "完成") + (job.historical ? " · 历史" : "");
     top.append(element("strong", "", job.label + (job.subject ? " · " + job.subject : "")), element("span", "badge " + (job.state === "succeeded" ? "ok" : "neutral"), text));
     record.append(top, element("div", "job-summary" + (job.error ? " error" : ""), jobSummary(job)));
+    if (job.advice) record.append(element("p", "form-note", job.advice));
+    if (job.history_error) record.append(element("p", "form-note", job.history_error));
     if (job.elapsed_seconds !== null) record.append(element("div", "form-footnote", new Date(job.finished_at).toLocaleTimeString() + " · 耗时 " + job.elapsed_seconds + " 秒"));
     const details = element("details");
     details.append(element("summary", "", "任务记录与完整结果"), element("pre", "", JSON.stringify({ events: job.events, result: job.result, error: job.error }, null, 2)));
@@ -390,7 +445,7 @@ async function loadState() {
     }
     const wasConnected = connected;
     connected = true;
-    const nextKey = JSON.stringify([value.workspace, value.entries, value.rehearsals, value.warnings]);
+    const nextKey = JSON.stringify([value.workspace, value.entries, value.rehearsals, value.warnings, value.incomplete_builds]);
     const nextJobs = JSON.stringify(value.jobs);
     data = value;
     $("#connection-dot").classList.remove("offline");
@@ -479,6 +534,17 @@ bindForm("#build-form", "build");
 bindForm("#compose-form", "compose", () => ({ ids: Array.from(selected) }));
 bindForm("#rehearse-form", "rehearse");
 bindForm("#init-form", "init");
+bindForm("#setup-form", "setup");
+$("#export-diagnostics").addEventListener("click", async () => {
+  try {
+    const response = await fetch("/api/diagnostics", {method: "POST", headers: {"Content-Type": "application/json", "X-FC27-Token": data.token}, body: "{}"});
+    const value = await response.json();
+    if (!response.ok) throw new Error(value.error || "诊断导出失败");
+    const output = $("#diagnostic-path");
+    output.replaceChildren(element("span", "", value.saved_path), button("复制路径", "subtle", () => copyText(value.saved_path)));
+    showToast("诊断摘要已保存在工作区 local/diagnostics。");
+  } catch (error) { showToast(error.message, true); }
+});
 bindForm("#register-form", "register", () => ({}), () => $("#register-dialog").close());
 go(location.hash.slice(1));
 (async function poll() { await loadState(); setTimeout(poll, 1500); })();

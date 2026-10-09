@@ -15,6 +15,7 @@ from fc27_management import (MAX_JSON, UNVERIFIED, decode_json, identifier, insp
                              read_bytes, relative, replace_bytes, restore_rehearsal, sha,
                              snapshot_tree, write_new)
 from fc27_mount import OfflineMount, audit_mount, plain_file
+from fc27_progress import emit
 
 
 PATH_KEYS = {"bundle", "export", "package", "stage"}
@@ -119,6 +120,7 @@ class Manager:
         return {"id": entry_id, "title": title, "registered": True, **entry["stats"], **UNVERIFIED}
 
     def check(self, entry_id: str) -> tuple[dict, dict]:
+        emit("preflight", "预检候选：" + entry_id)
         entry, _ = self.load_entry(entry_id)
         paths = {key: self.local(path) for key, path in entry["paths"].items()}
         for key, name in REPORTS.items():
@@ -151,6 +153,7 @@ class Manager:
             raise FileExistsError("构建目录已存在，不覆盖旧构建")
         pipeline_build(self.config_path, output, module, with_loader_stage=True)
         config = load_config(self.config_path)
+        emit("register")
         return self.register(entry_id, title, {"bundle": output / "built", "export": config["fc27_export"],
                                               "package": output / "packaged", "stage": output / "loader-stage"},
                              {"kind": "pipeline", "module": module, "parents": []})
@@ -194,6 +197,7 @@ class Manager:
         if entry_id in ids or (self.root / "library" / (entry_id + ".json")).exists():
             raise FileExistsError("合并结果须使用新的模组标识")
         entries, plans = self.selected_plans(ids)
+        emit("merge")
         plan = merge_plans(plans)
         config = load_config(self.config_path)
         output = self.local(self.root / "builds" / entry_id, exists=False)
@@ -202,9 +206,13 @@ class Manager:
         output.mkdir(parents=True)
         plan_path = output / "merged-plan.json"
         write_new(plan_path, json_bytes(plan))
+        emit("build")
         fixed_build(self.game, config["fc27_export"], config["sdk"], config["shared_types"], plan_path, output / "built")
+        emit("package")
         package_build(self.game, output / "built", config["fc27_export"], output / "packaged", "FC27")
+        emit("loader-stage")
         loader_stage(self.game, output / "built", config["fc27_export"], output / "packaged", output / "loader-stage")
+        emit("register")
         return self.register(entry_id, title, {"bundle": output / "built", "export": config["fc27_export"],
                                               "package": output / "packaged", "stage": output / "loader-stage"},
                              {"kind": "composed", "parents": [entry["id"] for entry in entries]})
