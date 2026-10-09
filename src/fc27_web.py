@@ -24,6 +24,8 @@ from fc27_setup import DEFAULTS, FIELDS, configure, detect_games, readiness
 from fc27_diagnostics import GATES, report as diagnostic_report
 from fc27_version import VERSION
 from fc27_schema_cache import scoped
+from fc27_player import snapshot as player_snapshot, choose_game
+from fc27_presets import prepare as prepare_preset
 
 
 ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
@@ -33,16 +35,19 @@ ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
 LABELS = {"refresh": "刷新工作区", "init": "初始化工作区", "register": "登记候选",
           "check": "离线预检", "build": "构建候选", "preview": "检查合并冲突",
           "compose": "合并重编译", "rehearse": "创建并应用副本", "status": "核对副本状态",
-          "restore": "还原副本", "setup": "配置研究工作区"}
+          "restore": "还原副本", "setup": "配置研究工作区",
+          "player-game": "识别游戏版本", "player-prepare": "自动准备内置方案"}
 RULES = {"refresh": set(), "init": {"config"}, "register": {"id", "title", "bundle", "export", "package", "stage"},
          "check": {"id"}, "build": {"id", "title", "module"}, "preview": {"ids"},
          "compose": {"id", "title", "ids"}, "rehearse": {"id", "run"},
-         "status": {"run"}, "restore": {"run"}, "setup": set(FIELDS)}
+         "status": {"run"}, "restore": {"run"}, "setup": set(FIELDS),
+         "player-game": {"game_root"}, "player-prepare": {"module"}}
 PHASES = {"refresh": "读取登记快照", "init": "创建项目内管理目录", "register": "核对候选并登记",
           "check": "重建检查版本、索引和载荷", "build": "研究、编译、打包并核对副本",
           "preview": "预检候选并比较修改计划", "compose": "合并计划、重编译并核对副本",
           "rehearse": "预检、备份并应用到项目副本", "status": "核对日志、备份和副本散列",
-          "restore": "核对备份并恢复项目副本", "setup": "保存本机配置并检查研究依赖"}
+          "restore": "核对备份并恢复项目副本", "setup": "保存本机配置并检查研究依赖",
+          "player-game": "只读核对游戏索引指纹", "player-prepare": "从本机原版自动生成预设副本"}
 
 
 def now() -> str:
@@ -107,11 +112,13 @@ class Application:
                               "setup_values": {**DEFAULTS, "game_root": next(iter(self.detected_games), "")},
                               "detected_games": self.detected_games, "readiness": None},
                 "entries": [], "details": {}, "rehearsals": [], "incomplete_builds": [],
-                "warnings": list(self.history_warnings), "gates": GATES, "version": VERSION, "safety": dict(UNVERIFIED)}
+                "warnings": list(self.history_warnings), "gates": GATES, "version": VERSION,
+                "player": player_snapshot(CLI.PROJECT_ROOT, self.detected_games), "safety": dict(UNVERIFIED)}
 
     def snapshot_for(self, manager: CLI.Manager) -> dict:
         result = self.empty_snapshot()
         result["workspace"].update(ready=True, config=str(manager.config_path), game_root=str(manager.game))
+        result["player"] = player_snapshot(CLI.PROJECT_ROOT, self.detected_games, str(manager.game))
         result["entries"] = manager.listing()["entries"]
         for entry in result["entries"]:
             detail, _ = manager.load_entry(entry["id"])
@@ -196,7 +203,13 @@ class Application:
                     raise ValueError("所选模块不在当前研究方案中")
                 if workspace.get("readiness") and not workspace["readiness"]["inputs_present"]:
                     raise ValueError("研究依赖尚未齐备，请在工作区设置中查看缺失项目")
-            if payload["action"] in ("build", "compose", "rehearse"):
+            if payload["action"] == "player-prepare":
+                player = self.snapshot["player"]
+                if not player["can_prepare"]:
+                    raise ValueError(player["error"] or "内置方案不能用于当前游戏版本")
+                if payload["module"] not in {m["id"] for m in player["modules"]}:
+                    raise ValueError("所选方案不在内置预设中")
+            if payload["action"] in ("build", "compose", "rehearse", "player-prepare"):
                 if shutil.disk_usage(CLI.PROJECT_ROOT).free < 512 * 1024 * 1024:
                     raise ValueError("工作区可用空间不足 512 MiB；请先释放空间，再生成候选或副本")
             if payload["action"] == "init" and self.root.exists():
@@ -255,7 +268,16 @@ class Application:
                     job["events"] = (job["events"] + [{"time": now(), **event}])[-100:]
                     self.persist(job)
             with listen(update):
-                if payload["action"] == "init":
+                if payload["action"] == "player-game":
+                    result = choose_game(CLI.PROJECT_ROOT, payload["game_root"])
+                    snapshot = self.read_snapshot()
+                elif payload["action"] == "player-prepare":
+                    result = prepare_preset(CLI.PROJECT_ROOT, Path(self.snapshot["player"]["game_root"]), payload["module"])
+                    snapshot = self.read_snapshot()
+                elif payload["action"] == "refresh" and not self.root.exists():
+                    result = {"refreshed": True, **UNVERIFIED}
+                    snapshot = self.read_snapshot()
+                elif payload["action"] == "init":
                     result = CLI.initialize(self.root, Path(payload["config"]))
                     snapshot = self.read_snapshot()
                 elif payload["action"] == "setup":

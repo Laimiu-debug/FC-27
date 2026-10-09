@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import logging
+import os
 from pathlib import Path
 import sys
 import threading
@@ -17,33 +18,18 @@ if not getattr(sys, "frozen", False):
     sys.path.insert(0, str(source / "src"))
     sys.path.insert(0, str(source / "scripts"))
 
-from fc27_runtime import VERSION, configure_workspace, discover_workspace, project_root, resource_root
+from fc27_runtime import VERSION, configure_workspace, discover_workspace, project_root, resource_root, validate_workspace
 from fc27_setup import create_workspace
 from fc27_workspace_preferences import last_workspace, remember_workspace
 
 
-def choose_workspace() -> Path | None:
-    import tkinter as tk
-    from tkinter import filedialog, messagebox
-    root = tk.Tk()
-    root.withdraw()
-    try:
-        existing = messagebox.askyesnocancel("FC27 首次启动", "已有研究工作区吗？\n\n是：连接已有目录\n否：创建新的离线工作区\n取消：退出", parent=root)
-        if existing is None:
-            return None
-        folder = filedialog.askdirectory(parent=root, title="选择已有工作区" if existing else "选择新工作区的存放位置", mustexist=True)
-        if not folder:
-            return None
-        path = Path(folder)
-        if existing:
-            if (path / "resources/whole-match-study.json").is_file() and not (path / "local").exists():
-                from fc27_setup import no_links
-                no_links(path)
-                (path / "local").mkdir()
-            return path
-        return create_workspace(path / "FC27-workspace")
-    finally:
-        root.destroy()
+def choose_workspace() -> Path:
+    # 普通用户不需要理解研究工作区；独立下载的 EXE 自动创建私有数据目录。
+    base = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local")))
+    path = base / "FC27CareerLab/workspace"
+    if path.exists() and any(path.iterdir()):
+        return validate_workspace(path)
+    return create_workspace(path)
 
 
 def show_error(message: str):

@@ -1,18 +1,18 @@
 # Windows EXE 发行包
 
-`dist/FC27Manager/FC27Manager.exe` 是 Windows x64 单文件桌面程序，当前版本 0.2.0。双击后在独立窗口显示中文管理界面，运行无需安装 Python，无需开启命令行或手动输入浏览器地址。发行目录另附使用说明、第三方许可和含 EXE 尺寸、源提交及 SHA-256 的 `release-manifest.json`。首次配置、任务历史与诊断说明见 [0.2.0 改进](manager-improvements.md)。
+`dist/FC27Manager/FC27Manager.exe` 是 Windows x64 单文件桌面程序，当前版本 0.3.0。双击后默认显示普通用户玩法包首页，运行无需安装 Python，无需开启命令行或手动输入浏览器地址。当前仍不能启用玩法包或改变比赛 AI；SDK、参考包与编译参数仅在开发工具内。见 [普通用户入口](player-entry.md)。发行目录另附使用说明、第三方许可和含 EXE 尺寸、源提交及 SHA-256 的 `release-manifest.json`。
 
 ## 使用
 
 将 EXE 保留在当前项目的 `dist/FC27Manager/` 下，即可自动连接现有 `local/mod-manager/`。根目录 `启动管理器.cmd` 也会优先启动此 EXE；没有构建产物时才回退到 Python 浏览器版。
 
-若将 EXE 移到项目外，启动时连接已有目录或创建新离线工作区；随后通过设置向导提供本机研究输入。Windows 只在用户注册表保存上次工作区位置，不迁移研究文件。也可显式指定：
+若将 EXE 移到项目外，优先复用上次工作区，否则自动在 LocalAppData 的 FC27CareerLab/workspace 创建外部工作区。普通用户无需选择研究目录或配置 SDK/参考包。Windows 只在用户注册表保存工作区位置，不迁移研究文件。开发者也可显式指定：
 
 ```powershell
 .\FC27Manager.exe --workspace 'X:\Projects\FC27' --root 'local/mod-manager'
 ```
 
-研究项目与游戏安装目录是两个不同的目录。EXE 内含程序、Python 运行时、前端、自有研究方案和配置示例，以及 WebView2 SDK 适配组件；游戏文件、SDK 研究样本、Oodle、候选、配置和备份继续从外部工作区读取，不打入发行包。复制 EXE 不会复制或迁移这些数据。
+研究项目与游戏安装目录是两个不同的目录。EXE 内含程序、Python 运行时、前端、自有研究方案、配置示例、版本绑定数值预设，以及 WebView2 SDK 适配组件；游戏文件、SDK 研究样本、Oodle、候选、个人配置和备份不打入发行包。复制 EXE 不会复制或迁移这些数据。
 
 系统需已有 Microsoft Edge WebView2 Runtime 与 .NET Framework 4.6.2 或更新版；本机已有并通过实际窗口检查。另一台电脑需要自行安装 [微软 WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。发行包没有捆绑整个浏览器运行时，不能将本机检查称为无依赖、跨机器兼容性验证。
 
@@ -38,7 +38,7 @@ python -m venv local/packaging/venv
 
 构建器清理子进程的 DLL 搜索路径，收集许可证，核对随 pywebview 提供的三个 Windows x64 WebView2 适配 DLL 与官方 NuGet 1.0.3856.49 包完全一致。`proxy_tools` 的 PyPI 包缺少完整许可证文件，采用作者仓库 [LICENSE.txt](https://github.com/jtushman/proxy_tools/blob/master/LICENSE.txt) 的原文副本。
 
-创建 EXE 前逐个核对打包来源，只允许项目源码、界面资源、两份自有公开模板、生成的许可、指定隔离环境、Python 安装的运行时和构建器生成的标准库归档。构建审计保存在 Git 忽略的 `build/fc27-exe-*/bundle-audit.json`，可能含本机工具路径，不进入发行包。`local/` 中的研究素材、个人配置与候选均不参与收集。构建器另生成发行 ZIP 与 SHA256 文件；版本唯一来源为 `src/fc27_version.py`。
+创建 EXE 前逐个核对打包来源，只允许项目源码、界面资源、三份自有公开描述/模板、生成的许可、指定隔离环境、Python 安装的运行时和构建器生成的标准库归档。构建审计保存在 Git 忽略的 `build/fc27-exe-*/bundle-audit.json`，可能含本机工具路径，不进入发行包。`local/` 中的研究素材、个人配置与候选均不参与收集。构建器另生成发行 ZIP 与 SHA256 文件；版本唯一来源为 `src/fc27_version.py`。
 
 ## 检查
 

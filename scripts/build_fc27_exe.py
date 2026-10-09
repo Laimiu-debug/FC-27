@@ -135,8 +135,9 @@ def main() -> int:
     shutil.copytree(licenses, output / "licenses")
     (output / "使用说明.txt").write_text(
         f"FC27 玩法模组管理器 {VERSION} · 离线研究版\n\n"
-        "双击 FC27Manager.exe，自动使用所在项目的研究工作区。\n"
-        "首次启动可连接已有目录或创建新工作区，再按界面向导提供本机研究资料。\n"
+        "双击 FC27Manager.exe，自动识别游戏并显示玩法方案与当前状态。\n"
+        "独立下载的 EXE 自动创建外部数据目录，普通用户无需填写 SDK、参考包或编译配置。\n"
+        "当前加载适配尚未完成，不能启用玩法包；启动游戏仍会使用原版玩法。\n"
         "EXE 已包含 Python 与前端，运行无需安装 Python。\n"
         "系统需要 Microsoft Edge WebView2 和 .NET Framework 4.6.2 或更新版。\n"
         "本机候选、配置和备份仍在外部项目 local，EXE 不含游戏或研究素材。\n"
@@ -151,7 +152,8 @@ def main() -> int:
                 "build_packages": versions, "exe": {"file": executable.name, "bytes": executable.stat().st_size,
                 "sha256": sha(executable)}, "bundled_input_count": len(json.loads(audit.read_text(encoding="utf-8"))),
                 "webview_sdk": WEBVIEW_SDK, "game_files_bundled": False, "research_inputs_bundled": False,
-                "game_files_written": False, "game_started_by_tool": False, "gameplay_effect_verified": False}
+                "game_files_written": False, "game_started_by_tool": False, "gameplay_effect_verified": False,
+                "loadable_mod": False, "enabled": False, "preset_descriptions_bundled": True}
     (output / "release-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     with zipfile.ZipFile(archive_path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(output.rglob("*")):

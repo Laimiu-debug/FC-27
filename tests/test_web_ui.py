@@ -240,7 +240,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.app.state()["jobs"], [])
 
     def test_async_failure_is_reported_and_endpoint_remains_available(self):
-        status, _, raw = self.post({"action": "refresh"})
+        status, _, raw = self.post({"action": "check", "id": "missing"})
         self.assertEqual(status, 202)
         accepted = json.loads(raw)
         wait_worker(self.app)
@@ -249,6 +249,14 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(state["jobs"][-1]["id"], accepted["job_id"])
         self.assertEqual(state["jobs"][-1]["state"], "failed")
         self.assertTrue(state["jobs"][-1]["error"])
+
+    def test_first_launch_refresh_needs_no_research_manager(self):
+        status, _, _ = self.post({"action": "refresh"})
+        self.assertEqual(status, 202)
+        wait_worker(self.app)
+        state = json.loads(self.request("GET", "/api/state")[2])
+        self.assertEqual(state["jobs"][-1]["state"], "succeeded")
+        self.assertFalse(state["player"]["can_enable"])
 
     def test_network_listener_cannot_bind_other_interfaces(self):
         with self.assertRaises(ValueError):

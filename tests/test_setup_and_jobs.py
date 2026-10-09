@@ -165,7 +165,7 @@ class HistoryAndProgressTests(unittest.TestCase):
             app = WEB.Application(Path(temporary) / "local/manager")
             with patch.object(CLI, "Manager", side_effect=RuntimeError("original")), \
                     patch.object(app, "read_snapshot", side_effect=RuntimeError("snapshot")):
-                app.submit({"action": "refresh"})
+                app.submit({"action": "check", "id": "missing"})
                 app.worker.join(3)
             self.assertFalse(app.busy)
             self.assertFalse(app.worker.is_alive())

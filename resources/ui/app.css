@@ -641,14 +641,14 @@ h3 {
   align-items:center;
   flex-shrink:0
 }
-form label {
+form label,.player-columns label {
   display:block;
   font-size:11px;
   color:#bbc9bf;
   margin:0 0 19px;
   font-weight:500
 }
-form input,form select {
+form input,form select,.player-columns select {
   display:block;
   width:100%;
   margin-top:9px;
@@ -663,7 +663,7 @@ form input,form select {
 input::placeholder {
   color:#5e7063
 }
-form input:focus,form select:focus {
+form input:focus,form select:focus,.player-columns select:focus {
   border-color:#8ea86e;
   outline:1px solid #8ea86e
 }
@@ -1418,3 +1418,18 @@ dialog::backdrop {
 .dependency-row { padding: 12px 0; border-bottom: 1px solid var(--border, #293c34); }
 .dependency-row p { margin: 6px 0 0; line-height: 1.65; overflow-wrap: anywhere; }
 #incomplete-builds p { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* 普通用户首页；开发配置保留在折叠工具入口中。 */
+#developer-navigation { margin-top: 14px; }
+details > summary { cursor: pointer; color: var(--muted, #91a99e); padding: 12px 0; font-size: 14px; }
+.player-columns { margin-top: 24px; }
+.player-columns .panel { display: flex; flex-direction: column; gap: 14px; }
+.player-path { overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; color: #b0c3b9; }
+.player-release-note { margin-top: 24px; line-height: 1.8; }
+.player-release-note h2 { margin-bottom: 14px; }
+.player-release-note details { border-top: 1px solid #263c32; margin-top: 16px; }
+.player-release-note .btn { margin-top: 16px; }
+@media(max-width:760px) {
+  .sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+  #developer-navigation { margin-top: 0; width: 100%; }
+  #developer-navigation > summary { padding: 10px 14px; }
+}

@@ -16,6 +16,8 @@ Windows x64 桌面入口为 `scripts/fc27_desktop.py`，使用 pywebview 的 Edg
 
 ## 开发约定
 
+0.3.0 默认展示普通用户玩法包首页，开发工具折叠；独立 EXE 自动创建外部工作区，不要求玩家提供 SDK/参考包。`resources/whole-match-preset.json` 仅含已审查版本的数值编辑描述；`src/fc27_presets.py` 严格核对四份索引、完整资产散列、RIFF、根 GUID/签名和编辑位后复现候选，复用既有打包/加载副本重建。本次不进行运行时 SDK 适配，不允许将旧偏移移植到更新版本。解压依赖只复用已校验本地文件，或从固定官方 ZIP 按大小、ZIP/DLL 散列获取至外部 local，不执行 FMT 或未知 DLL。首页的 `can_enable`、`enabled`、`installed` 始终为 false；没有真实安装/启动接口。详见 `docs/player-entry.md`。
+
 管理器 0.2.0 的首次工作区创建、配置向导、持久任务记录、阶段进度、操作内静态类型缓存和绑定报告诊断见 `docs/manager-improvements.md`。唯一版本来源为 `src/fc27_version.py`；Windows CI 只使用合成离线样本，按版本标签发布预发行包。首次启动偏好可在 Windows 用户注册表保存工作区位置，研究数据仍只在外部 local；缓存不允许省略游戏来源、资产、类型和 Bundle 校验。诊断摘要只核对已有报告绑定，不能升级为实际引擎或玩法证明。用户于 2026-10-09 再次明确禁止实机验证。
 
 - 文档与用户提示默认使用简体中文。

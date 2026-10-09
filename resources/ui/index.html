@@ -11,24 +11,34 @@
 </head>
 <body>
   <aside class="sidebar">
-    <a class="brand" href="#library" aria-label="FC27 管理器首页"><span class="brand-mark">27</span><span>FC27<span class="brand-sub">CAREER LAB</span></span></a>
-    <span class="side-label">管理工作区</span>
+    <a class="brand" href="#play" aria-label="FC27 管理器首页"><span class="brand-mark">27</span><span>FC27<span class="brand-sub">CAREER LAB</span></span></a>
+    <span class="side-label">经理模式玩法</span>
     <nav aria-label="主导航">
-      <button data-page="library" class="nav-item active"><span class="nav-icon">▦</span>候选库<span id="nav-count" class="nav-count">—</span></button>
+      <button data-page="play" class="nav-item active"><span class="nav-icon">▦</span>玩法包</button>
+      <details id="developer-navigation"><summary>开发者工具</summary>
+      <button data-page="library" class="nav-item"><span class="nav-icon">▦</span>候选库<span id="nav-count" class="nav-count">—</span></button>
       <button data-page="build" class="nav-item"><span class="nav-icon">◇</span>构建与合并</button>
       <button data-page="copies" class="nav-item"><span class="nav-icon">↺</span>副本与恢复</button>
       <button data-page="settings" class="nav-item"><span class="nav-icon">⚙</span>工作区设置</button>
+      </details>
     </nav>
     <div class="side-note"><span class="eyebrow">当前范围</span><strong>整场比赛 · 球员 AI</strong><p>持球、跑位、防守、转换与角色执行。</p><span class="tag">离线研究版</span></div>
     <div class="side-footer"><span class="status-dot" id="connection-dot"></span><span id="connection-text">正在连接本机服务</span><small>所有产物保存在项目目录</small></div>
   </aside>
 
   <main class="main">
-    <header class="topbar"><div class="breadcrumbs">FC27 / <strong id="page-name">候选库</strong></div><div class="top-actions"><span class="small-status">加载兼容性待验证</span><button class="btn subtle" id="refresh-button"><span>↻</span> 刷新工作区</button><button class="btn subtle hidden" id="exit-button">退出管理器</button></div></header>
+    <header class="topbar"><div class="breadcrumbs">FC27 / <strong id="page-name">玩法包</strong></div><div class="top-actions"><span class="small-status">加载适配未完成</span><button class="btn subtle" id="refresh-button"><span>↻</span> 重新检查</button><button class="btn subtle hidden" id="exit-button">退出管理器</button></div></header>
     <div id="workspace-alert" class="notice hidden" role="status"></div>
     <div id="warning-area"></div>
 
-    <section id="page-library" class="page">
+    <section id="page-play" class="page">
+      <div class="hero"><div class="hero-copy"><div class="eyebrow accent">FC27 · OFFLINE CAREER</div><h1>经理模式玩法包</h1><p>目标：选择方案，启用后自己启动离线经理模式。</p><span class="badge" id="player-status">检查本机游戏</span></div><div class="hero-pitch"><img src="/pitch.svg" alt="整场比赛的跑位和传球示意"><span class="pitch-caption">持球 · 跑位 · 防守 · 转换</span></div></div>
+      <div class="two-columns player-columns"><article class="panel"><h2>你的 FC27</h2><p class="muted" id="player-game-status">正在识别安装目录</p><p class="player-path" id="player-game-path"></p><details><summary>选择其他安装位置</summary><form id="player-game-form"><label>游戏安装目录<input name="game_root" required maxlength="2048" list="player-detected-games" placeholder="选择检测到的目录或填写完整路径"></label><datalist id="player-detected-games"></datalist><button class="btn outline full" type="submit">只读检查版本</button></form></details><p class="form-footnote" id="player-error"></p></article>
+      <article class="panel"><h2>玩法方案</h2><label>选择方案<select id="player-module"></select></label><p class="muted">覆盖持球决策、无球接应、防守反应、团队防守、攻守转换和角色执行。方案的比赛效果尚未验证。</p><button type="button" class="btn primary full" id="player-enable" disabled>暂不可启用 · 加载适配未完成</button><p class="form-footnote" id="player-message">当前不能启用玩法包。启动游戏仍会使用原版玩法。</p></article></div>
+      <article class="panel player-release-note"><h2>这版还不能改变游戏里的 AI</h2><p>离线编译已经可以自动完成，但 FC27 对修改文件的接受方式和实际加载入口仍未解决。工具没有安装玩法包，也没有修改游戏目录。</p><p>你无需填写 SDK、参考包或编译配置，也无需帮忙测试。等加载链路具备证据后，才能开放启用和还原。</p><details id="player-research"><summary>查看开发进度与离线准备</summary><p class="muted">内置版本绑定预设：只包含数值编辑描述，从本机原版生成副本。版本不匹配时停止，不按同名字段猜偏移。首次准备可能自动下载约 249 MiB 的固定版本公开工具包，仅提取已核对 SHA256 的解压依赖。</p><div id="player-prepared" class="form-note"></div><button type="button" class="btn outline" id="player-prepare">自动准备所选方案 · 不安装</button><p class="form-footnote">这个操作只在工作区生成和校验文件，完成后启用按钮仍不会开放。</p></details></article>
+    </section>
+
+    <section id="page-library" class="page hidden">
       <div class="hero"><div class="hero-copy"><div class="eyebrow accent">YOUR CAREER. YOUR GAME.</div><h1>整场比赛，从这里开始。</h1><p>管理玩法候选，组合修改方案，保留每一次实验的退路。</p><div class="hero-actions"><button class="btn primary" data-go="build">＋ 构建新候选</button><button class="btn outline" id="open-register">登记已有候选</button></div></div><div class="hero-pitch"><img src="/pitch.svg" alt="球场上的球员位置与传球路线示意"><span class="pitch-caption">BUILD · REVIEW · RESTORE</span></div></div>
       <div class="metrics"><div class="metric"><span>已登记候选</span><strong id="metric-entries">—</strong><small>可查看、选择与组合</small></div><div class="metric"><span>本次预检通过</span><strong id="metric-checks">0</strong><small>仅表示离线结构检查</small></div><div class="metric"><span>实验副本</span><strong id="metric-copies">—</strong><small>备份与事务记录保留</small></div><div class="metric"><span>已选择</span><strong id="metric-selected">0</strong><small>组合前先检查冲突</small></div></div>
       <div class="section-head"><div><h2>玩法候选库 <span id="library-count" class="count-pill">0</span></h2><p>登记快照不会自动重新验证游戏版本。</p></div><label class="search"><span>⌕</span><input id="search" type="search" placeholder="搜索名称或标识" aria-label="搜索候选"></label></div>

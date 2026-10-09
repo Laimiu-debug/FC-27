@@ -1,0 +1,1320 @@
+{
+  "format": "fc27-bound-preset-v1",
+  "id": "whole-match-experiment-v1",
+  "title": "整场比赛研究方案",
+  "source_hashes": {
+    "Data/layout.toc": "40819a0923f1fb073dba22c07a1087e021929f3d9c9d81411d4cc17922a4ba6a",
+    "Patch/layout.toc": "be45e422676a0426f1b073ac5de557cd3a180f98ef8788b3d4177f9828c40fbc",
+    "Data/Win32/fc/fcgame/fcgame.toc": "9afe525353432bd2c5d59dac5e48591399a8858adbaa7010761cb666de946ee0",
+    "Patch/Win32/fc/fcgame/fcgame.toc": "3173f4b4552382dcc94e940125ab3c7eff901054dc0f1547bd53d35ef416b5ff"
+  },
+  "provenance": {
+    "build_report_sha256": "84b534da080f246ed56bfe115b1670595ac9695e5c25584a44851b01dba6ad91",
+    "sdk_sha256": "0462a9801210599373e2b881771638ddcf1c1873a13a6157000676948fbe065b",
+    "shared_types_sha256": "25566c8b8f2e997d16d561ee1f1187491194be39c6b8cc7522b2766ddd0bd2b3",
+    "recipe_sha256": "3f552d70a6b7476763364cde50fa4f453334c61701325c5f38d5d35a5c8ceff4",
+    "runtime_schema_adaptation": false,
+    "reference_is_modified_fc26": true
+  },
+  "modules": [
+    {
+      "id": "ball_decisions",
+      "title": "持球决策",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaiballhandler_runtime",
+        "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_callforaction_runtime",
+        "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_kickdelay_runtime"
+      ]
+    },
+    {
+      "id": "offball_support",
+      "title": "无球接应",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaipredictionpoints_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_diagonaloption_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crosserbacksupport_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crossersidesupport_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_outletoption_runtime"
+      ]
+    },
+    {
+      "id": "defender_reactions",
+      "title": "防守反应",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_defending_attributes_runtime"
+      ]
+    },
+    {
+      "id": "team_defense",
+      "title": "团队盯防与截线",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaimarker_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_zonal_defense_cutpassinglanes_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_contain_runtime"
+      ]
+    },
+    {
+      "id": "transitions",
+      "title": "攻守转换",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_playphase_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacking_attributes_runtime",
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_backwardspeed_runtime"
+      ]
+    },
+    {
+      "id": "role_execution",
+      "title": "角色执行",
+      "assets": [
+        "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_tacticalrole_runtime"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaiballhandler_runtime",
+      "original_size": 522,
+      "packed_sha1": "9433eae82f414ee23d62da8934d499e4e0ad63c4",
+      "original_sha256": "6410ef78c53a3901968c685bc9b7df50b456ec23a0553bfb15679d0ed35930fe",
+      "candidate_sha256": "8518a4050c0c365885fd30fd9c2753d89100e23e8bd315c040c18e67a717f471",
+      "root_identity": {
+        "guid": "cb8abffe-6124-057b-517c-3021c1823f3d",
+        "signature": "64e27483"
+      },
+      "changes": [
+        {
+          "field": "GroundPassDecisionDistToTargetMod",
+          "offset": 148,
+          "format": "<f",
+          "before_hex": "0000c03f",
+          "after_hex": "00004040"
+        },
+        {
+          "field": "GroundPassDecisionDribbleMinSpace",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "cdcc4c3d",
+          "after_hex": "cdcccc3c"
+        },
+        {
+          "field": "GroundPassDecisionMinCourseSafety",
+          "offset": 96,
+          "format": "<f",
+          "before_hex": "a4707d3f",
+          "after_hex": "a470fd3f"
+        },
+        {
+          "field": "GroundPassDecisionSpaceRatingMod",
+          "offset": 164,
+          "format": "<f",
+          "before_hex": "00002040",
+          "after_hex": "0000a040"
+        },
+        {
+          "field": "OneTimePassProbabilityMod",
+          "offset": 220,
+          "format": "<f",
+          "before_hex": "cdcc4c3e",
+          "after_hex": "9a99993f"
+        },
+        {
+          "field": "ThroughPassMod",
+          "offset": 184,
+          "format": "<f",
+          "before_hex": "3333733f",
+          "after_hex": "cdcc0c3f"
+        },
+        {
+          "field": "DribbleTTDistToTargetWeight[1]",
+          "offset": 280,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "6666263f"
+        },
+        {
+          "field": "DribbleTTDistToTargetWeight[2]",
+          "offset": 284,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "3333333f"
+        },
+        {
+          "field": "DribbleTTDistToTargetWeight[3]",
+          "offset": 288,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "3333333f"
+        },
+        {
+          "field": "DribbleTTDistToTargetWeight[4]",
+          "offset": 292,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "3333333f"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_callforaction_runtime",
+      "original_size": 370,
+      "packed_sha1": "d1906086d7f5cad6a0bac1a7dede164274de154e",
+      "original_sha256": "5638fed8b066e9763e1a26b4c946e9c2ebad9c02fa7e794c8c35f884f92879f1",
+      "candidate_sha256": "05a95887b8d62f1a8eb19bf045eb9162a7a6d32ebad25bfe855e0acfccad0609",
+      "root_identity": {
+        "guid": "432ba5f3-64fe-2135-dbe8-58db6beee4a6",
+        "signature": "a963b070"
+      },
+      "changes": [
+        {
+          "field": "DefaultCommitEarlyScoreThreshold",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "9a99193f",
+          "after_hex": "0000803f"
+        },
+        {
+          "field": "CrossCommitEarlyScoreThreshold",
+          "offset": 112,
+          "format": "<f",
+          "before_hex": "cdcc4c3f",
+          "after_hex": "0000803f"
+        },
+        {
+          "field": "RegularPassCommitEarlyScoreThreshold",
+          "offset": 96,
+          "format": "<f",
+          "before_hex": "cdcc4c3f",
+          "after_hex": "0000803f"
+        },
+        {
+          "field": "ThroughPassCommitEarlyScoreThreshold",
+          "offset": 136,
+          "format": "<f",
+          "before_hex": "9a99193f",
+          "after_hex": "0000803f"
+        },
+        {
+          "field": "CrossDifficultyThreshold",
+          "offset": 120,
+          "format": "<f",
+          "before_hex": "0000003f",
+          "after_hex": "3333733f"
+        },
+        {
+          "field": "RegularPassDifficultyThreshold",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "3333333f",
+          "after_hex": "9a99593f"
+        },
+        {
+          "field": "ThroughPassDifficultyThreshold",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "3333333f",
+          "after_hex": "3333733f"
+        },
+        {
+          "field": "DefaultDifficultyThreshold",
+          "offset": 108,
+          "format": "<f",
+          "before_hex": "3333333f",
+          "after_hex": "9a99593f"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_kickdelay_runtime",
+      "original_size": 1970,
+      "packed_sha1": "c201f6f808c243d131827042cec2c90371932781",
+      "original_sha256": "075ad6b57c0ba6efdc4a8d52f27eaa9fbbaa01c3fb0a156218e0252c541bb059",
+      "candidate_sha256": "1143ea0aa25ad16425c26423d9252ae39c40bfdb7d5d3f934f7aa78d694cc480",
+      "root_identity": {
+        "guid": "ffd5bbbf-fca8-73d1-3cb9-ca021ee8f9b0",
+        "signature": "a3ac4cfb"
+      },
+      "changes": [
+        {
+          "field": "passDelayMax.Points[0].Y",
+          "offset": 1152,
+          "format": "<f",
+          "before_hex": "0000a042",
+          "after_hex": "00002043"
+        },
+        {
+          "field": "passDelayMax.Points[1].Y",
+          "offset": 1180,
+          "format": "<f",
+          "before_hex": "0000a042",
+          "after_hex": "00002043"
+        },
+        {
+          "field": "passDelayMax.Points[2].Y",
+          "offset": 1208,
+          "format": "<f",
+          "before_hex": "00007042",
+          "after_hex": "0000f042"
+        },
+        {
+          "field": "passDelayMax.Points[3].Y",
+          "offset": 1236,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "0000c842"
+        },
+        {
+          "field": "passDelayMax.Points[4].Y",
+          "offset": 1264,
+          "format": "<f",
+          "before_hex": "00002042",
+          "after_hex": "0000a042"
+        },
+        {
+          "field": "passDelayMax.Points[5].Y",
+          "offset": 1292,
+          "format": "<f",
+          "before_hex": "0000f041",
+          "after_hex": "00007042"
+        },
+        {
+          "field": "passDelayMax.Points[6].Y",
+          "offset": 1320,
+          "format": "<f",
+          "before_hex": "00007041",
+          "after_hex": "0000f041"
+        },
+        {
+          "field": "passDelayMax.Points[7].Y",
+          "offset": 1348,
+          "format": "<f",
+          "before_hex": "00000000",
+          "after_hex": "00007041"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaipredictionpoints_runtime",
+      "original_size": 486,
+      "packed_sha1": "6c19a8b9abb4901a12567dab694a85a0f4b44e34",
+      "original_sha256": "cb04246face028275aa66858f5f462ba7e4f39120eae3885b98b1b5d6982b4ad",
+      "candidate_sha256": "d99de6dc09f3996bddf8bb1cf0766c6c5c77bf9a58a685e645dd8d852e85e8f0",
+      "root_identity": {
+        "guid": "cc9b596b-9b2a-9a32-3884-c17918a3a010",
+        "signature": "636051d6"
+      },
+      "changes": [
+        {
+          "field": "PredictionPointMinMovementDelta[0]",
+          "offset": 196,
+          "format": "<f",
+          "before_hex": "9a99993e",
+          "after_hex": "cdcc4c3f"
+        },
+        {
+          "field": "PredictionPointMinMovementDelta[1]",
+          "offset": 200,
+          "format": "<f",
+          "before_hex": "9a99993e",
+          "after_hex": "6666663f"
+        },
+        {
+          "field": "PredictionPointMinMovementDelta[2]",
+          "offset": 204,
+          "format": "<f",
+          "before_hex": "9a99993e",
+          "after_hex": "0000803f"
+        },
+        {
+          "field": "PredictionPointMinMovementDelta[3]",
+          "offset": 208,
+          "format": "<f",
+          "before_hex": "9a99993e",
+          "after_hex": "cdcc8c3f"
+        },
+        {
+          "field": "PredictionPointMinMovementDelta[4]",
+          "offset": 212,
+          "format": "<f",
+          "before_hex": "0000003f",
+          "after_hex": "3333b33f"
+        },
+        {
+          "field": "PredictionPointMaxMovementDistance[0]",
+          "offset": 148,
+          "format": "<f",
+          "before_hex": "0000c842",
+          "after_hex": "00003442"
+        },
+        {
+          "field": "PredictionPointMaxMovementDistance[1]",
+          "offset": 152,
+          "format": "<f",
+          "before_hex": "0000c842",
+          "after_hex": "00002842"
+        },
+        {
+          "field": "PredictionPointMaxMovementDistance[2]",
+          "offset": 156,
+          "format": "<f",
+          "before_hex": "0000c842",
+          "after_hex": "00001842"
+        },
+        {
+          "field": "PredictionPointMaxMovementDistance[3]",
+          "offset": 160,
+          "format": "<f",
+          "before_hex": "0000c842",
+          "after_hex": "00000842"
+        },
+        {
+          "field": "PredictionPointMaxMovementDistance[4]",
+          "offset": 164,
+          "format": "<f",
+          "before_hex": "00008c42",
+          "after_hex": "0000f041"
+        },
+        {
+          "field": "PredictionPointMaxSpaceDistance[0]",
+          "offset": 172,
+          "format": "<f",
+          "before_hex": "00008c42",
+          "after_hex": "0000a043"
+        },
+        {
+          "field": "PredictionPointMaxSpaceDistance[1]",
+          "offset": 176,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "00008243"
+        },
+        {
+          "field": "PredictionPointMaxSpaceDistance[2]",
+          "offset": 180,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "00007043"
+        },
+        {
+          "field": "PredictionPointMaxSpaceDistance[3]",
+          "offset": 184,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "00005c43"
+        },
+        {
+          "field": "PredictionPointMaxSpaceDistance[4]",
+          "offset": 188,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "00005c43"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_diagonaloption_runtime",
+      "original_size": 376,
+      "packed_sha1": "6c964ab1cd676f78b1ccd3b7818d131ef6c73de0",
+      "original_sha256": "018a83db1f9aeb42c1b763b56bcf36f60b033fd0ec45bdf77f6078cbfdc4a3f3",
+      "candidate_sha256": "a261c4030b87ed6e2967bc1b58f9efe592bff77618f94afee0da275401c5c4d0",
+      "root_identity": {
+        "guid": "bd70e676-b46e-f24b-1bf1-a7fcb52e0b5d",
+        "signature": "3e084e9c"
+      },
+      "changes": [
+        {
+          "field": "MaxDistFromAttackerToSpace",
+          "offset": 116,
+          "format": "<f",
+          "before_hex": "00007041",
+          "after_hex": "00003442"
+        },
+        {
+          "field": "MinAngleDiffBetweenSpaceAndForward",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "0000c842",
+          "after_hex": "00007042"
+        },
+        {
+          "field": "MaxAngleDiffBetweenSpaceAndForward",
+          "offset": 120,
+          "format": "<f",
+          "before_hex": "00000743",
+          "after_hex": "00001643"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crosserbacksupport_runtime",
+      "original_size": 348,
+      "packed_sha1": "58c8f6e3550405592089edae719a6fb0be920bc4",
+      "original_sha256": "2a6b276c8e3958bd2f8dab631a42b3711ab95a2a6307864dd28d661abc952f43",
+      "candidate_sha256": "9c4a1f5e3a83bfc3259378f9882b81962ceaa7aa0175b19e643cefe43798c3b3",
+      "root_identity": {
+        "guid": "09de4efb-8dc2-478d-96e1-7ae5cc494901",
+        "signature": "827b27e6"
+      },
+      "changes": [
+        {
+          "field": "supportAreaExtentionLengthForUpperX",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "0000c03f"
+        },
+        {
+          "field": "supportAreaExtentionWidth",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "00007041",
+          "after_hex": "00007040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crossersidesupport_runtime",
+      "original_size": 348,
+      "packed_sha1": "0d769ffb78a21f87006eabe68c9e6481d56c0103",
+      "original_sha256": "127a0c059702a9ab36b35eb87422ec5c57348c011aa7c291527382a1f92cda6f",
+      "candidate_sha256": "8f750f96311f2fdae9799a916759cb5bdfbd44d692ed0c41fa137186b29417dc",
+      "root_identity": {
+        "guid": "35b8b866-508c-44b2-6dc7-74b675752a84",
+        "signature": "8399fb18"
+      },
+      "changes": [
+        {
+          "field": "supportAreaExtentionLengthForUpperX",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "00000041",
+          "after_hex": "00000040"
+        },
+        {
+          "field": "supportAreaExtentionWidth",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "00002041",
+          "after_hex": "00002040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_outletoption_runtime",
+      "original_size": 342,
+      "packed_sha1": "1b99d12a6dffe9bd72df32917f5e9cf15cade666",
+      "original_sha256": "77d801027496037806e5869ae145fe874d04e9792e8118bbaa747e6a5b17da73",
+      "candidate_sha256": "87d4d0e13051de284ad3aac97d2fbe79a648f95a8ed62d7a876f5bba2fa22400",
+      "root_identity": {
+        "guid": "25f6979d-9fa8-b9f0-d4fe-360228fbd44a",
+        "signature": "b7b6963a"
+      },
+      "changes": [
+        {
+          "field": "DistToStartIncreasingSpeedForMinSpeed",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "00008040",
+          "after_hex": "00002040"
+        },
+        {
+          "field": "DistToReachMaxSpeedForMinSpeed",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "0000e040",
+          "after_hex": "00009040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_defending_attributes_runtime",
+      "original_size": 11302,
+      "packed_sha1": "e8c0b872499e1baa2c4d19d5f0524e783234ea86",
+      "original_sha256": "662d0cf02ae241c6de309a91dbefbf187551fdabd431e211878fd548f13be791",
+      "candidate_sha256": "c61d42a2ecadc20e446b9f6a2e93502d1740cfbbfd19423469ea9c1f212617b8",
+      "root_identity": {
+        "guid": "f3c0b527-f56b-5a8c-a453-a3f8551b5f1d",
+        "signature": "41da6375"
+      },
+      "changes": [
+        {
+          "field": "defenderReactionTimeLegendary.Points[0].Y",
+          "offset": 7792,
+          "format": "<f",
+          "before_hex": "00005842",
+          "after_hex": "00008042"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[1].Y",
+          "offset": 7820,
+          "format": "<f",
+          "before_hex": "00005042",
+          "after_hex": "00007842"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[2].Y",
+          "offset": 7848,
+          "format": "<f",
+          "before_hex": "00004842",
+          "after_hex": "00007042"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[3].Y",
+          "offset": 7876,
+          "format": "<f",
+          "before_hex": "00004042",
+          "after_hex": "00006842"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[4].Y",
+          "offset": 7904,
+          "format": "<f",
+          "before_hex": "00003042",
+          "after_hex": "00005842"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[5].Y",
+          "offset": 7932,
+          "format": "<f",
+          "before_hex": "00002042",
+          "after_hex": "00004842"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[6].Y",
+          "offset": 7960,
+          "format": "<f",
+          "before_hex": "00001042",
+          "after_hex": "00003842"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[7].Y",
+          "offset": 7988,
+          "format": "<f",
+          "before_hex": "0000e041",
+          "after_hex": "00000c42"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[8].Y",
+          "offset": 8016,
+          "format": "<f",
+          "before_hex": "0000c041",
+          "after_hex": "00004041"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[9].Y",
+          "offset": 8044,
+          "format": "<f",
+          "before_hex": "00008041",
+          "after_hex": "00000041"
+        },
+        {
+          "field": "defenderReactionTimeLegendary.Points[10].Y",
+          "offset": 8072,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "00004040"
+        },
+        {
+          "field": "defenderReactionTimeWorldClass.Points[7].Y",
+          "offset": 7200,
+          "format": "<f",
+          "before_hex": "0000f041",
+          "after_hex": "0000c841"
+        },
+        {
+          "field": "defenderReactionTimeWorldClass.Points[8].Y",
+          "offset": 7228,
+          "format": "<f",
+          "before_hex": "0000d041",
+          "after_hex": "00005041"
+        },
+        {
+          "field": "defenderReactionTimeWorldClass.Points[9].Y",
+          "offset": 7256,
+          "format": "<f",
+          "before_hex": "00009041",
+          "after_hex": "00001041"
+        },
+        {
+          "field": "defenderReactionTimeWorldClass.Points[10].Y",
+          "offset": 7284,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "00004040"
+        },
+        {
+          "field": "defenderReactionTimePro.Points[7].Y",
+          "offset": 5348,
+          "format": "<f",
+          "before_hex": "00001042",
+          "after_hex": "0000f041"
+        },
+        {
+          "field": "defenderReactionTimePro.Points[8].Y",
+          "offset": 5376,
+          "format": "<f",
+          "before_hex": "00000042",
+          "after_hex": "00008041"
+        },
+        {
+          "field": "defenderReactionTimePro.Points[9].Y",
+          "offset": 5404,
+          "format": "<f",
+          "before_hex": "0000c041",
+          "after_hex": "00004041"
+        },
+        {
+          "field": "defenderReactionTimePro.Points[10].Y",
+          "offset": 5432,
+          "format": "<f",
+          "before_hex": "00004041",
+          "after_hex": "0000c040"
+        },
+        {
+          "field": "markingIntelligence.Points[4].Y",
+          "offset": 9460,
+          "format": "<f",
+          "before_hex": "50faa43e",
+          "after_hex": "398e633e"
+        },
+        {
+          "field": "markingIntelligence.Points[5].Y",
+          "offset": 9488,
+          "format": "<f",
+          "before_hex": "c5a8e13e",
+          "after_hex": "9275ae3e"
+        },
+        {
+          "field": "maxTargetSpeed.Points[0].Y",
+          "offset": 8856,
+          "format": "<f",
+          "before_hex": "ec51b83e",
+          "after_hex": "c3f5a83e"
+        },
+        {
+          "field": "maxTargetSpeed.Points[1].Y",
+          "offset": 8884,
+          "format": "<f",
+          "before_hex": "a470bd3e",
+          "after_hex": "7b14ae3e"
+        },
+        {
+          "field": "maxTargetSpeed.Points[2].Y",
+          "offset": 8912,
+          "format": "<f",
+          "before_hex": "5c8fc23e",
+          "after_hex": "3333b33e"
+        },
+        {
+          "field": "maxTargetSpeed.Points[3].Y",
+          "offset": 8940,
+          "format": "<f",
+          "before_hex": "3d0ad73e",
+          "after_hex": "6666e63e"
+        },
+        {
+          "field": "maxTargetSpeed.Points[4].Y",
+          "offset": 8968,
+          "format": "<f",
+          "before_hex": "0000003f",
+          "after_hex": "9a99193f"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaimarker_runtime",
+      "original_size": 5708,
+      "packed_sha1": "5af7a1fa65d07253c716b451e16531ecefb75c5f",
+      "original_sha256": "3a556291dc900c28e58bbf42cc7d44d631f2b1bf8f2030b0b5a627074c9940d1",
+      "candidate_sha256": "e9d4647ea6330111fe512f7ffd2136bced26d103c8ce498043dfc7f9e7d547da",
+      "root_identity": {
+        "guid": "0ad0e028-5207-1e3e-5104-bbbab2eb6f06",
+        "signature": "7fb66339"
+      },
+      "changes": [
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChange.Points[4].Y",
+          "offset": 4140,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "a4707d3f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChange.Points[5].Y",
+          "offset": 4168,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "a4707d3f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChange.Points[6].Y",
+          "offset": 4196,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "a4707d3f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChange.Points[7].Y",
+          "offset": 4224,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "a4707d3f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[2].Y",
+          "offset": 3172,
+          "format": "<f",
+          "before_hex": "1cd4413f",
+          "after_hex": "e9a00e3f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[3].Y",
+          "offset": 3200,
+          "format": "<f",
+          "before_hex": "bde28b3f",
+          "after_hex": "4792643f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[4].Y",
+          "offset": 3228,
+          "format": "<f",
+          "before_hex": "0000a03f",
+          "after_hex": "6666863f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[5].Y",
+          "offset": 3256,
+          "format": "<f",
+          "before_hex": "0000c03f",
+          "after_hex": "6666a63f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[6].Y",
+          "offset": 3284,
+          "format": "<f",
+          "before_hex": "0000c03f",
+          "after_hex": "6666a63f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier.Points[7].Y",
+          "offset": 3312,
+          "format": "<f",
+          "before_hex": "0000c03f",
+          "after_hex": "6666a63f"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[0].Y",
+          "offset": 2888,
+          "format": "<f",
+          "before_hex": "00009c41",
+          "after_hex": "0000a441"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[1].Y",
+          "offset": 2916,
+          "format": "<f",
+          "before_hex": "567c8341",
+          "after_hex": "567c8b41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[2].Y",
+          "offset": 2944,
+          "format": "<f",
+          "before_hex": "833a8441",
+          "after_hex": "833a8c41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[3].Y",
+          "offset": 2972,
+          "format": "<f",
+          "before_hex": "833a8441",
+          "after_hex": "833a8c41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[4].Y",
+          "offset": 3000,
+          "format": "<f",
+          "before_hex": "94247541",
+          "after_hex": "4a928241"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[5].Y",
+          "offset": 3028,
+          "format": "<f",
+          "before_hex": "5b7c5141",
+          "after_hex": "5b7c3141"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[6].Y",
+          "offset": 3056,
+          "format": "<f",
+          "before_hex": "b0f81e41",
+          "after_hex": "61f1fd40"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MaxDifficulty.Points[7].Y",
+          "offset": 3084,
+          "format": "<f",
+          "before_hex": "dbb68540",
+          "after_hex": "b56d4b40"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[0].Y",
+          "offset": 1748,
+          "format": "<f",
+          "before_hex": "6cdbcc41",
+          "after_hex": "6cdbd441"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[1].Y",
+          "offset": 1776,
+          "format": "<f",
+          "before_hex": "0000a841",
+          "after_hex": "0000b041"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[2].Y",
+          "offset": 1804,
+          "format": "<f",
+          "before_hex": "0000a841",
+          "after_hex": "0000b041"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[3].Y",
+          "offset": 1832,
+          "format": "<f",
+          "before_hex": "9424a741",
+          "after_hex": "9424af41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[4].Y",
+          "offset": 1860,
+          "format": "<f",
+          "before_hex": "00009c41",
+          "after_hex": "0000a441"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[5].Y",
+          "offset": 1888,
+          "format": "<f",
+          "before_hex": "72508f41",
+          "after_hex": "e4a07e41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[6].Y",
+          "offset": 1916,
+          "format": "<f",
+          "before_hex": "b7e26b41",
+          "after_hex": "b7e24b41"
+        },
+        {
+          "field": "CPUAI_MarkerReactionTime_MinDifficulty.Points[7].Y",
+          "offset": 1944,
+          "format": "<f",
+          "before_hex": "00000041",
+          "after_hex": "0000c040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_zonal_defense_cutpassinglanes_runtime",
+      "original_size": 382,
+      "packed_sha1": "813dee50a20b49a3f2cdf09583f8e95fc5587d29",
+      "original_sha256": "7de3c2129f613ff4fdbad1398e2901438c30667129af519c695be07dafa61cc6",
+      "candidate_sha256": "bb94c447fca4567bb7fdd94f606d392341925f030d9839c25f9db6e5e1bc6e81",
+      "root_identity": {
+        "guid": "2d97be7a-ea3d-8dd0-5a1c-8fa6dbe91222",
+        "signature": "ecd149d5"
+      },
+      "changes": [
+        {
+          "field": "MaxFormDeltaZ_InterceptWithInst",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "0000f040",
+          "after_hex": "0000a041"
+        },
+        {
+          "field": "MaxFormDeltaZ_InterceptWithoutInst",
+          "offset": 108,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "00008841"
+        },
+        {
+          "field": "MaxFormDeltaZ_InterceptWithInstShouldConsiderOtherOpp",
+          "offset": 96,
+          "format": "<f",
+          "before_hex": "0000a040",
+          "after_hex": "00007041"
+        },
+        {
+          "field": "MaxFormDeltaZ_InterceptWithoutInstShouldConsiderOtherOpp",
+          "offset": 112,
+          "format": "<f",
+          "before_hex": "00006040",
+          "after_hex": "00004041"
+        },
+        {
+          "field": "MaxDistToIntercept_WithInstruction",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "0000a040",
+          "after_hex": "00007041"
+        },
+        {
+          "field": "MaxDistToIntercept_WithoutInstruction",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "00006040",
+          "after_hex": "00003041"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_contain_runtime",
+      "original_size": 808,
+      "packed_sha1": "932d537d9c3e690e8843bdaec4712b1db3cd4186",
+      "original_sha256": "f086edf3f461b99baff1f0966335df61bcbdd48e223a5d7b7f767c4a461736ec",
+      "candidate_sha256": "1d9919da4da56cfe62141060194266cbc3bd28cc65c7063f3afd2a90291f21bd",
+      "root_identity": {
+        "guid": "40327740-f7d6-9f32-df01-214c014b8bbb",
+        "signature": "aa1c8ab9"
+      },
+      "changes": [
+        {
+          "field": "containMarkingLowRated",
+          "offset": 128,
+          "format": "<f",
+          "before_hex": "00001041",
+          "after_hex": "0000f040"
+        },
+        {
+          "field": "containMarkingTopRated",
+          "offset": 120,
+          "format": "<f",
+          "before_hex": "0000d040",
+          "after_hex": "00009040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_playphase_runtime",
+      "original_size": 346,
+      "packed_sha1": "a51ded2563e7a87606e3dfad4966427a6bfe3c2b",
+      "original_sha256": "37ea66b40f4a3be9edce58a5d404c86fdb3f076b04c6975a47a1dbcf16e9f288",
+      "candidate_sha256": "defd80ddc712b051ed861d75c846926344fc34404529e1129e10afac604bfadb",
+      "root_identity": {
+        "guid": "666ab587-9674-925f-8af6-b9dedc205e31",
+        "signature": "c9691143"
+      },
+      "changes": [
+        {
+          "field": "positiveTransitionBaseTime",
+          "offset": 96,
+          "format": "<f",
+          "before_hex": "00008040",
+          "after_hex": "00004040"
+        },
+        {
+          "field": "negativeTransitionBaseTime",
+          "offset": 100,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "00000041"
+        },
+        {
+          "field": "FreeDistThresholdLong",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "0000e040",
+          "after_hex": "00006041"
+        },
+        {
+          "field": "FreeDistThresholdMedium",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "0000a040",
+          "after_hex": "00002041"
+        },
+        {
+          "field": "FreeDistThresholdShort",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "00004040",
+          "after_hex": "0000c040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacking_attributes_runtime",
+      "original_size": 3942,
+      "packed_sha1": "8c9d12fe68e59be63cad670849ac22089d771a47",
+      "original_sha256": "dbc439d2151d805cbbbb31f2544b9d104b6f7b19d75f6c7aff4849eb4c433a87",
+      "candidate_sha256": "0a81b96b7cbd8a69b8e8ecccb3b725491d287285d8cae6b15069e6ba00274285",
+      "root_identity": {
+        "guid": "a1590da6-77c2-4910-2019-c25b6454167b",
+        "signature": "ed3d2838"
+      },
+      "changes": [
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[0].Y",
+          "offset": 1448,
+          "format": "<f",
+          "before_hex": "0000b841",
+          "after_hex": "00003841"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[1].Y",
+          "offset": 1476,
+          "format": "<f",
+          "before_hex": "0000b041",
+          "after_hex": "00003041"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[2].Y",
+          "offset": 1504,
+          "format": "<f",
+          "before_hex": "0000a041",
+          "after_hex": "00002041"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[3].Y",
+          "offset": 1532,
+          "format": "<f",
+          "before_hex": "00009041",
+          "after_hex": "00001041"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[4].Y",
+          "offset": 1560,
+          "format": "<f",
+          "before_hex": "00008841",
+          "after_hex": "00000841"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[5].Y",
+          "offset": 1588,
+          "format": "<f",
+          "before_hex": "00008041",
+          "after_hex": "00000041"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[6].Y",
+          "offset": 1616,
+          "format": "<f",
+          "before_hex": "00007041",
+          "after_hex": "0000f040"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[7].Y",
+          "offset": 1644,
+          "format": "<f",
+          "before_hex": "00006041",
+          "after_hex": "0000e040"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[8].Y",
+          "offset": 1672,
+          "format": "<f",
+          "before_hex": "00004041",
+          "after_hex": "0000c040"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[9].Y",
+          "offset": 1700,
+          "format": "<f",
+          "before_hex": "00000041",
+          "after_hex": "00008040"
+        },
+        {
+          "field": "attackingReactionTimeNoFatigue.Points[10].Y",
+          "offset": 1728,
+          "format": "<f",
+          "before_hex": "00008040",
+          "after_hex": "00000040"
+        },
+        {
+          "field": "openUpToSpaceThreshold",
+          "offset": 212,
+          "format": "<f",
+          "before_hex": "cdcc4c3f",
+          "after_hex": "cdcccc3e"
+        },
+        {
+          "field": "reactionTimeDuringTransition.Points[0].Y",
+          "offset": 1276,
+          "format": "<f",
+          "before_hex": "00000842",
+          "after_hex": "00008841"
+        },
+        {
+          "field": "reactionTimeDuringTransition.Points[1].Y",
+          "offset": 1304,
+          "format": "<f",
+          "before_hex": "0000d041",
+          "after_hex": "00005041"
+        },
+        {
+          "field": "reactionTimeDuringTransition.Points[2].Y",
+          "offset": 1332,
+          "format": "<f",
+          "before_hex": "0000a041",
+          "after_hex": "00002041"
+        },
+        {
+          "field": "reactionTimeDuringTransition.Points[3].Y",
+          "offset": 1360,
+          "format": "<f",
+          "before_hex": "0000c040",
+          "after_hex": "00004040"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_backwardspeed_runtime",
+      "original_size": 382,
+      "packed_sha1": "7ee2122c2577bae96478b29efec300df7bd0deb0",
+      "original_sha256": "bb72345565623639b0b38479fcbcdc880955313af347dfbda0a84afbfd905138",
+      "candidate_sha256": "8cf407ce9d3e068b0aac4e1ac2b2b1fe9e191821bc2c21ba87b3e0da6930534c",
+      "root_identity": {
+        "guid": "64ea72d5-f5e9-7235-9600-0361e8b85643",
+        "signature": "65597c2a"
+      },
+      "changes": [
+        {
+          "field": "defenderSprintBackSpeedRate",
+          "offset": 92,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "8fc2753f"
+        },
+        {
+          "field": "midfielderSprintBackSpeedRate",
+          "offset": 104,
+          "format": "<f",
+          "before_hex": "c3f5683f",
+          "after_hex": "52b85e3f"
+        },
+        {
+          "field": "forwardSprintBackSpeedRate",
+          "offset": 120,
+          "format": "<f",
+          "before_hex": "0e2d523f",
+          "after_hex": "ae47613f"
+        },
+        {
+          "field": "defenderSlowSprintBackSpeedRate",
+          "offset": 124,
+          "format": "<f",
+          "before_hex": "151d493f",
+          "after_hex": "f6285c3f"
+        },
+        {
+          "field": "midfielderSlowSprintBackSpeedRate",
+          "offset": 88,
+          "format": "<f",
+          "before_hex": "b81e453f",
+          "after_hex": "cdcc4c3f"
+        },
+        {
+          "field": "forwardSlowSprintBackSpeedRate",
+          "offset": 100,
+          "format": "<f",
+          "before_hex": "ae47413f",
+          "after_hex": "b81e453f"
+        },
+        {
+          "field": "defenderSlowBackSpeedRate",
+          "offset": 128,
+          "format": "<f",
+          "before_hex": "211f243f",
+          "after_hex": "3333333f"
+        },
+        {
+          "field": "midfielderSlowBackSpeedRate",
+          "offset": 116,
+          "format": "<f",
+          "before_hex": "cd3b0e3f",
+          "after_hex": "9a99193f"
+        },
+        {
+          "field": "forwardSlowBackSpeedRate",
+          "offset": 108,
+          "format": "<f",
+          "before_hex": "423ee83e",
+          "after_hex": "cdcc0c3f"
+        }
+      ]
+    },
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_tacticalrole_runtime",
+      "original_size": 1206,
+      "packed_sha1": "e9cc9c69931075fd05fff09a4358ed8deba0f523",
+      "original_sha256": "75d78235757f5b4e27e6d55c014e63d0efe3dd312f8307a4c956fca041c328cc",
+      "candidate_sha256": "89a52f93c3f92633de3812d2264c57a556c359e9de2fe7d3c0926aab15c55f91",
+      "root_identity": {
+        "guid": "199cf597-1100-28a7-dc76-d80b03a70683",
+        "signature": "0aae99c6"
+      },
+      "changes": [
+        {
+          "field": "supportSpeedModifierForNovice",
+          "offset": 184,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "3333733f"
+        },
+        {
+          "field": "supportSpeedModifierForIntermediate",
+          "offset": 156,
+          "format": "<f",
+          "before_hex": "cdcc8c3f",
+          "after_hex": "6666863f"
+        },
+        {
+          "field": "supportSpeedModifierForAdvanced",
+          "offset": 172,
+          "format": "<f",
+          "before_hex": "0000a03f",
+          "after_hex": "6666a63f"
+        },
+        {
+          "field": "markSpeedModifierForUnfamiliar",
+          "offset": 188,
+          "format": "<f",
+          "before_hex": "cdcc4c3f",
+          "after_hex": "0000403f"
+        },
+        {
+          "field": "markSpeedModifierForNovice",
+          "offset": 132,
+          "format": "<f",
+          "before_hex": "7b146e3f",
+          "after_hex": "ae47613f"
+        },
+        {
+          "field": "markSpeedModifierForIntermediate",
+          "offset": 164,
+          "format": "<f",
+          "before_hex": "0000803f",
+          "after_hex": "3333733f"
+        },
+        {
+          "field": "markSpeedModifierForAdvanced",
+          "offset": 140,
+          "format": "<f",
+          "before_hex": "9a99993f",
+          "after_hex": "0000a03f"
+        }
+      ]
+    }
+  ],
+  "safety": {
+    "loadable_mod": false,
+    "loader_compatibility_verified": false,
+    "gameplay_effect_verified": false,
+    "game_started_by_tool": false,
+    "game_files_written": false,
+    "filesystem_links_created": false
+  }
+}

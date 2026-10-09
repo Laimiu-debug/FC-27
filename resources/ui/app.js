@@ -3,7 +3,7 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const number = value => Number(value || 0).toLocaleString("zh-CN");
-const pages = { library: "候选库", build: "构建与合并", copies: "副本与恢复", settings: "工作区设置" };
+const pages = { play: "玩法包", library: "候选库", build: "构建与合并", copies: "副本与恢复", settings: "工作区设置" };
 const states = { prepared: "准备完成", applying: "应用中断", applied: "已应用", restoring: "恢复中断", restored: "已还原" };
 let data = null;
 let selected = new Set();
@@ -45,13 +45,16 @@ function showToast(message, error = false) {
 }
 
 function go(page) {
-  const name = pages[page] ? page : "library";
+  const name = pages[page] ? page : "play";
   const switched = currentPage !== name;
   currentPage = name;
   location.hash = name;
   $$(".page").forEach(node => node.classList.toggle("hidden", node.id !== "page-" + name));
   $$("[data-page]").forEach(node => node.classList.toggle("active", node.dataset.page === name));
   $("#page-name").textContent = pages[name];
+  $("#developer-navigation").open = name !== "play";
+  $("#workspace-alert").classList.toggle("hidden", name === "play" || !$("#workspace-alert").textContent);
+  $("#task-panel").classList.toggle("hidden", name === "play" && !data?.busy && !historyOpen);
   if (switched) window.scrollTo(0, 0);
 }
 
@@ -79,6 +82,32 @@ function updateControls() {
   $("#selection-preview").disabled = busy() || selected.size < 2;
   $("#selection-compose").disabled = busy() || selected.size < 2;
   $("#compose-preview").disabled = busy() || selected.size < 2;
+  $("#player-game-form button[type=submit]").disabled = busy();
+  $("#player-prepare").disabled = busy() || !data?.player?.can_prepare;
+  // 后端同样没有启用入口；离线 prepared 状态不能升级为 enabled。
+  $("#player-enable").disabled = true;
+  $("#task-panel").classList.toggle("hidden", currentPage === "play" && !data?.busy && !historyOpen);
+}
+
+function renderPlayer() {
+  const player = data.player;
+  $("#player-status").textContent = "未启用 · 加载适配未完成";
+  $("#player-game-status").textContent = player.game_detected ? (player.version_matched ? "已识别游戏，索引版本与内置预设一致" : "已识别游戏，预设版本不匹配") : "尚未识别到游戏";
+  $("#player-game-path").textContent = player.game_root || "可选择游戏安装位置";
+  $("#player-error").textContent = player.error || "";
+  $("#player-message").textContent = player.message;
+  const input = $("#player-game-form [name=game_root]");
+  if (!input.value) input.value = player.game_root;
+  $("#player-detected-games").replaceChildren(...player.detected_games.map(path => {
+    const option = element("option"); option.value = path; return option;
+  }));
+  const modules = $("#player-module"), previous = modules.value;
+  modules.replaceChildren(...player.modules.map(module => {
+    const option = element("option", "", module.title); option.value = module.id; return option;
+  }));
+  if (player.modules.some(module => module.id === previous)) modules.value = previous;
+  const prepared = player.last_prepared;
+  $("#player-prepared").textContent = prepared ? "上次离线准备：" + number(prepared.assets_built) + " 份资产，" + number(prepared.changed_values) + " 项修改，" + number(prepared.changed_bytes) + " 个变更字节。文件未安装，当前未启用。" : "尚无离线准备记录；这不影响识别游戏，也无需普通用户执行。";
 }
 
 function setSelected(id, checked) {
@@ -255,7 +284,7 @@ function renderSettings() {
   const alert = $("#workspace-alert");
   alert.replaceChildren();
   const message = workspace.error || (!workspace.ready ? "工作区尚未初始化，先连接项目 local 中的本机配置。" : workspace.build_error);
-  alert.classList.toggle("hidden", !message);
+  alert.classList.toggle("hidden", !message || currentPage === "play");
   alert.classList.toggle("error", Boolean(workspace.error));
   if (message) alert.append(element("span", "", message), button("查看设置 →", "subtle", () => go("settings")));
   const warnings = $("#warning-area");
@@ -445,7 +474,7 @@ async function loadState() {
     }
     const wasConnected = connected;
     connected = true;
-    const nextKey = JSON.stringify([value.workspace, value.entries, value.rehearsals, value.warnings, value.incomplete_builds]);
+    const nextKey = JSON.stringify([value.workspace, value.entries, value.rehearsals, value.warnings, value.incomplete_builds, value.player]);
     const nextJobs = JSON.stringify(value.jobs);
     data = value;
     $("#connection-dot").classList.remove("offline");
@@ -454,7 +483,7 @@ async function loadState() {
       snapshotKey = nextKey;
       selected = new Set(Array.from(selected).filter(id => value.entries.some(entry => entry.id === id)));
       updateJobFacts();
-      renderLibrary(); renderPicker(); renderCopies(); renderSettings(); renderPreview();
+      renderLibrary(); renderPicker(); renderCopies(); renderSettings(); renderPreview(); renderPlayer();
     }
     if (nextJobs !== jobsKey) { jobsKey = nextJobs; renderJobs(); }
     updateControls();
@@ -535,6 +564,8 @@ bindForm("#compose-form", "compose", () => ({ ids: Array.from(selected) }));
 bindForm("#rehearse-form", "rehearse");
 bindForm("#init-form", "init");
 bindForm("#setup-form", "setup");
+bindForm("#player-game-form", "player-game");
+$("#player-prepare").addEventListener("click", () => runAction({action: "player-prepare", module: $("#player-module").value}));
 $("#export-diagnostics").addEventListener("click", async () => {
   try {
     const response = await fetch("/api/diagnostics", {method: "POST", headers: {"Content-Type": "application/json", "X-FC27-Token": data.token}, body: "{}"});
