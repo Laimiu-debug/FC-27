@@ -125,6 +125,7 @@ def readiness(project: Path, config: dict) -> dict:
 
 
 def configure(project: Path, manager_root: Path, values: dict, initialize) -> dict:
+    project = project.resolve(strict=True)
     config = {**{key: values[key].strip() for key in FIELDS}, "recipe": DEFAULTS["recipe"]}
     game = Path(config["game_root"])
     game = (game if game.is_absolute() else project / game).resolve(strict=True)

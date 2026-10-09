@@ -18,7 +18,7 @@ def make_workspace(path):
     (path / "resources").mkdir(parents=True)
     (path / "resources/whole-match-study.json").write_text("{}", encoding="utf-8")
     (path / "local").mkdir()
-    return path
+    return path.resolve()
 
 
 class RuntimeTests(unittest.TestCase):

@@ -35,7 +35,7 @@ def safe_relative(name: str) -> PurePosixPath:
 
 def input_path(root: Path, relative: str) -> Path:
     path = (root / safe_relative(relative)).resolve(strict=True)
-    if not path.is_relative_to(root):
+    if not path.is_relative_to(root.resolve(strict=True)):
         raise FormatError("输入文件解析后超出游戏目录")
     return path
 

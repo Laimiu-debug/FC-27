@@ -17,6 +17,8 @@ import fc27_manager as CLI
 import fc27_web as WEB
 from fc27_jobs import JobStore
 from fc27_management import UNVERIFIED
+from fc27_management import project_local
+from fc27_assets import input_path
 from fc27_progress import emit, listen
 from fc27_schema_cache import cached, scoped, stats
 from fc27_diagnostics import report
@@ -32,6 +34,24 @@ def game_fixture(root):
 
 
 class SetupTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows 8.3 路径测试")
+    def test_short_path_alias_resolves_inside_workspace_and_still_rejects_local_root(self):
+        import ctypes
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary) / "Long Workspace Name For FC27"
+            folder = project / "local/inputs"
+            folder.mkdir(parents=True)
+            file = folder / "sample.txt"
+            file.write_bytes(b"fixture")
+            buffer = ctypes.create_unicode_buffer(32768)
+            if not ctypes.windll.kernel32.GetShortPathNameW(str(project), buffer, len(buffer)):
+                self.skipTest("文件系统未提供短路径")
+            alias = Path(buffer.value)
+            self.assertEqual(project_local(alias / "local/inputs/sample.txt", project), file.resolve())
+            self.assertEqual(input_path(alias / "local", "inputs/sample.txt"), file.resolve())
+            with self.assertRaises(ValueError):
+                project_local(alias / "local", project)
+
     def test_new_workspace_copies_only_public_templates(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = SETUP.create_workspace(Path(temporary) / "中文 工作区")
@@ -188,7 +208,7 @@ class HistoryAndProgressTests(unittest.TestCase):
             self.assertFalse(value["loadable_mod"])
             self.assertFalse(value["real_game_testing_allowed"])
             exported = app.export_diagnostics()
-            self.assertTrue(Path(exported["saved_path"]).is_relative_to(Path(temporary) / "local"))
+            self.assertTrue(Path(exported["saved_path"]).is_relative_to(Path(temporary).resolve() / "local"))
             self.assertEqual(json.loads(Path(exported["saved_path"]).read_text(encoding="utf-8")), exported["report"])
 
 

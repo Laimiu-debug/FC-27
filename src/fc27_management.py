@@ -76,17 +76,14 @@ def project_local(path: Path, project: Path, game: Path | None = None, exists: b
     if local_root.is_symlink() or local_root.is_junction():
         raise ValueError("项目 local 不接受链接")
     local = local_root.resolve()
-    # 先检查词法路径上的链接，再解析路径；目录输入不要求是文件。
+    # 先检查词法路径的所有祖先，再比较规范路径；Windows 8.3 别名
+    # 与长路径可能指向同一目录，不能把未解析别名与规范 local 作比较。
     lexical = Path(os.path.abspath(path))
-    if not lexical.is_relative_to(local) or lexical == local:
-        raise ValueError("管理输入和输出必须位于项目 local 内")
-    current = local
-    for part in lexical.relative_to(local).parts:
-        current /= part
+    for current in (lexical, *lexical.parents):
         if current.is_symlink() or current.is_junction():
             raise ValueError("管理输入和输出不接受链接")
     resolved = lexical.resolve(strict=exists)
-    if not resolved.is_relative_to(local) or (game and resolved.is_relative_to(game.resolve())):
+    if resolved == local or not resolved.is_relative_to(local) or (game and resolved.is_relative_to(game.resolve())):
         raise ValueError("管理路径越界或位于游戏目录")
     return resolved
 
