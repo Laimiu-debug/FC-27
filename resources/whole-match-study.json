@@ -1,0 +1,113 @@
+{
+  "format": "fc27-whole-match-study-v1",
+  "id": "whole-match-reference-v1",
+  "description": "FC26 修改样本与 FC27 原版的结构核对实验，包含版本差异；所有模块均未验证玩法效果。",
+  "modules": [
+    {
+      "id": "ball_decisions",
+      "title": "持球决策",
+      "hypothesis": "传球距离、线路安全、空间和提前决定阈值可能共同影响持球选择；含义由名称推断。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaiballhandler_runtime",
+          "fields": ["GroundPassDecisionDistToTargetMod", "GroundPassDecisionDribbleMinSpace", "GroundPassDecisionMinCourseSafety", "GroundPassDecisionSpaceRatingMod", "OneTimePassProbabilityMod", "ThroughPassMod", "DribbleTTDistToTargetWeight"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_callforaction_runtime",
+          "fields": ["DefaultCommitEarlyScoreThreshold", "CrossCommitEarlyScoreThreshold", "RegularPassCommitEarlyScoreThreshold", "ThroughPassCommitEarlyScoreThreshold", "CrossDifficultyThreshold", "RegularPassDifficultyThreshold", "ThroughPassDifficultyThreshold", "DefaultDifficultyThreshold"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_kickdelay_runtime",
+          "fields": ["passDelayMax"]
+        }
+      ]
+    },
+    {
+      "id": "offball_support",
+      "title": "无球接应",
+      "hypothesis": "预测范围、斜向空位和边路支援区域可能影响接应位置；数组列含义尚未验证。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaipredictionpoints_runtime",
+          "fields": ["PredictionPointMinMovementDelta", "PredictionPointMaxMovementDistance", "PredictionPointMaxSpaceDistance"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_diagonaloption_runtime",
+          "fields": ["MaxDistFromAttackerToSpace", "MinAngleDiffBetweenSpaceAndForward", "MaxAngleDiffBetweenSpaceAndForward"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crosserbacksupport_runtime",
+          "fields": ["supportAreaExtentionLengthForUpperX", "supportAreaExtentionWidth"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_crossersidesupport_runtime",
+          "fields": ["supportAreaExtentionLengthForUpperX", "supportAreaExtentionWidth"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacker_outletoption_runtime",
+          "fields": ["DistToStartIncreasingSpeedForMinSpeed", "DistToReachMaxSpeedForMinSpeed"]
+        }
+      ]
+    },
+    {
+      "id": "defender_reactions",
+      "title": "防守反应",
+      "hypothesis": "不同难度的反应曲线、盯防评价和目标速度可能影响防守行为；参考曲线并非全部更快。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_defending_attributes_runtime",
+          "fields": ["defenderReactionTimeLegendary", "defenderReactionTimeWorldClass", "defenderReactionTimePro", "markingIntelligence", "maxTargetSpeed"]
+        }
+      ]
+    },
+    {
+      "id": "team_defense",
+      "title": "团队盯防与截线",
+      "hypothesis": "盯防响应、截线活动范围和压迫盯防参数可能共同影响协防；更大数值不代表更强 AI。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaimarker_runtime",
+          "fields": ["CPUAI_MarkerReactionAmount_BallDirectionChange", "CPUAI_MarkerReactionAmount_BallDirectionChangeSpeedModifier", "CPUAI_MarkerReactionTime_MaxDifficulty", "CPUAI_MarkerReactionTime_MinDifficulty"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_zonal_defense_cutpassinglanes_runtime",
+          "fields": ["MaxFormDeltaZ_InterceptWithInst", "MaxFormDeltaZ_InterceptWithoutInst", "MaxFormDeltaZ_InterceptWithInstShouldConsiderOtherOpp", "MaxFormDeltaZ_InterceptWithoutInstShouldConsiderOtherOpp", "MaxDistToIntercept_WithInstruction", "MaxDistToIntercept_WithoutInstruction"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_contain_runtime",
+          "fields": ["containMarkingLowRated", "containMarkingTopRated"]
+        }
+      ]
+    },
+    {
+      "id": "transitions",
+      "title": "攻守转换",
+      "hypothesis": "转换阶段时长、进攻反应曲线和各位置回撤速度可能相互影响；单位和状态触发尚未验证。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_playphase_runtime",
+          "fields": ["positiveTransitionBaseTime", "negativeTransitionBaseTime", "FreeDistThresholdLong", "FreeDistThresholdMedium", "FreeDistThresholdShort"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_attacking_attributes_runtime",
+          "fields": ["attackingReactionTimeNoFatigue", "openUpToSpaceThreshold", "reactionTimeDuringTransition"]
+        },
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_backwardspeed_runtime",
+          "fields": ["defenderSprintBackSpeedRate", "midfielderSprintBackSpeedRate", "forwardSprintBackSpeedRate", "defenderSlowSprintBackSpeedRate", "midfielderSlowSprintBackSpeedRate", "forwardSlowSprintBackSpeedRate", "defenderSlowBackSpeedRate", "midfielderSlowBackSpeedRate", "forwardSlowBackSpeedRate"]
+        }
+      ]
+    },
+    {
+      "id": "role_execution",
+      "title": "角色执行",
+      "hypothesis": "角色熟悉度对应的支援与盯防执行速度可能影响职责表现；不等于重写角色决策逻辑。",
+      "assets": [
+        {
+          "name": "fifa/attribulator/gameplay/groups/gp_positioning/gp_positioning_tacticalrole_runtime",
+          "fields": ["supportSpeedModifierForNovice", "supportSpeedModifierForIntermediate", "supportSpeedModifierForAdvanced", "markSpeedModifierForUnfamiliar", "markSpeedModifierForNovice", "markSpeedModifierForIntermediate", "markSpeedModifierForAdvanced"]
+        }
+      ]
+    }
+  ]
+}

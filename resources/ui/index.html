@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>FC27 · 玩法模组管理器</title>
+  <link rel="icon" href="/pitch.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#library" aria-label="FC27 管理器首页"><span class="brand-mark">27</span><span>FC27<span class="brand-sub">CAREER LAB</span></span></a>
+    <span class="side-label">管理工作区</span>
+    <nav aria-label="主导航">
+      <button data-page="library" class="nav-item active"><span class="nav-icon">▦</span>候选库<span id="nav-count" class="nav-count">—</span></button>
+      <button data-page="build" class="nav-item"><span class="nav-icon">◇</span>构建与合并</button>
+      <button data-page="copies" class="nav-item"><span class="nav-icon">↺</span>副本与恢复</button>
+      <button data-page="settings" class="nav-item"><span class="nav-icon">⚙</span>工作区设置</button>
+    </nav>
+    <div class="side-note"><span class="eyebrow">当前范围</span><strong>整场比赛 · 球员 AI</strong><p>持球、跑位、防守、转换与角色执行。</p><span class="tag">离线研究版</span></div>
+    <div class="side-footer"><span class="status-dot" id="connection-dot"></span><span id="connection-text">正在连接本机服务</span><small>所有产物保存在项目目录</small></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><div class="breadcrumbs">FC27 / <strong id="page-name">候选库</strong></div><div class="top-actions"><span class="small-status">加载兼容性待验证</span><button class="btn subtle" id="refresh-button"><span>↻</span> 刷新工作区</button><button class="btn subtle hidden" id="exit-button">退出管理器</button></div></header>
+    <div id="workspace-alert" class="notice hidden" role="status"></div>
+    <div id="warning-area"></div>
+
+    <section id="page-library" class="page">
+      <div class="hero"><div class="hero-copy"><div class="eyebrow accent">YOUR CAREER. YOUR GAME.</div><h1>整场比赛，从这里开始。</h1><p>管理玩法候选，组合修改方案，保留每一次实验的退路。</p><div class="hero-actions"><button class="btn primary" data-go="build">＋ 构建新候选</button><button class="btn outline" id="open-register">登记已有候选</button></div></div><div class="hero-pitch"><img src="/pitch.svg" alt="球场上的球员位置与传球路线示意"><span class="pitch-caption">BUILD · REVIEW · RESTORE</span></div></div>
+      <div class="metrics"><div class="metric"><span>已登记候选</span><strong id="metric-entries">—</strong><small>可查看、选择与组合</small></div><div class="metric"><span>本次预检通过</span><strong id="metric-checks">0</strong><small>仅表示离线结构检查</small></div><div class="metric"><span>实验副本</span><strong id="metric-copies">—</strong><small>备份与事务记录保留</small></div><div class="metric"><span>已选择</span><strong id="metric-selected">0</strong><small>组合前先检查冲突</small></div></div>
+      <div class="section-head"><div><h2>玩法候选库 <span id="library-count" class="count-pill">0</span></h2><p>登记快照不会自动重新验证游戏版本。</p></div><label class="search"><span>⌕</span><input id="search" type="search" placeholder="搜索名称或标识" aria-label="搜索候选"></label></div>
+      <div id="candidate-grid" class="candidate-grid"></div>
+      <div id="library-empty" class="empty-state hidden"><span class="empty-icon">◇</span><h3>从第一份玩法候选开始</h3><p>构建研究方案，或登记已经生成的编译与加载副本。</p><button class="btn primary" data-go="build">构建新候选</button></div>
+      <div id="selection-bar" class="selection-bar hidden"><div><strong id="selection-label">已选择 0 个候选</strong><span>组合将从原版基线重新编译</span></div><div class="button-row"><button class="btn subtle" id="clear-selection">清空</button><button class="btn outline" id="selection-preview">检查冲突</button><button class="btn primary" id="selection-compose">合并重编译 →</button></div></div>
+    </section>
+
+    <section id="page-build" class="page hidden">
+      <div class="page-heading"><span class="eyebrow accent">COMPOSE YOUR GAME</span><h1>构建与合并</h1><p>选择研究模块生成候选，或把多份修改计划合并后重新编译。</p></div>
+      <div class="two-columns"><article class="panel"><div class="panel-heading"><span class="number-mark">01</span><div><h2>构建新候选</h2><p>研究 → 编译 → 打包 → 离线校验</p></div></div>
+        <form id="build-form"><label>候选名称<input name="title" required maxlength="120" placeholder="例如：我的攻守转换实验"></label><label>候选标识<div class="input-with-button"><input name="id" required pattern="[a-z][a-z0-9-]{0,47}" maxlength="48" placeholder="例如：transitions-v2"><button type="button" class="btn subtle generate-id" data-prefix="build">自动生成</button></div><small>小写字母、数字和连字符；已有标识不会覆盖。</small></label><label>玩法模块<select name="module" id="module-select" required></select></label><div class="form-note">输出保留在项目 local 目录。模块内容是研究方案，比赛效果尚未验证。</div><button class="btn primary full" type="submit">构建并登记候选</button></form>
+      </article><article class="panel"><div class="panel-heading"><span class="number-mark">02</span><div><h2>组合你的方案</h2><p>合并修改计划，重新生成整套索引</p></div></div><div id="compose-picker" class="compose-picker"></div><button id="compose-preview" class="btn outline full">检查所选候选的冲突</button><div id="preview-result" class="preview-result hidden" role="status"></div>
+        <form id="compose-form"><label>合并候选名称<input name="title" required maxlength="120" placeholder="例如：整场比赛组合实验"></label><label>合并候选标识<div class="input-with-button"><input name="id" required pattern="[a-z][a-z0-9-]{0,47}" maxlength="48" placeholder="例如：whole-match-v2"><button type="button" class="btn subtle generate-id" data-prefix="combined">自动生成</button></div></label><button id="compose-submit" class="btn primary full" type="submit">合并计划并重新编译</button><small class="form-footnote">请先检查冲突。共同输出路径会统一重建，不能直接叠加文件。</small></form>
+      </article></div>
+    </section>
+
+    <section id="page-copies" class="page hidden">
+      <div class="page-heading"><span class="eyebrow accent">KEEP A WAY BACK</span><h1>副本与恢复</h1><p>在项目内验证候选文件的应用与还原，保留完整备份和事务记录。</p></div>
+      <article class="panel copy-create"><div><h2>创建实验副本</h2><p>先核对候选，再备份并应用到新的项目内目录。</p></div><form id="rehearse-form"><label>选择候选<select name="id" id="rehearse-select" required></select></label><label>副本标识<div class="input-with-button"><input name="run" required pattern="[a-z][a-z0-9-]{0,47}" maxlength="48" placeholder="例如：trial-02"><button type="button" class="btn subtle generate-id" data-prefix="trial">生成</button></div></label><button class="btn primary" type="submit">创建并应用副本</button></form></article>
+      <div class="section-head"><div><h2>实验记录</h2><p>列表展示日志快照；点击“核对状态”检查当前文件与备份。</p></div></div><div id="copy-list" class="copy-list"></div><div id="copy-empty" class="empty-state hidden"><span class="empty-icon">↺</span><h3>还没有实验副本</h3><p>选择一份候选创建副本，应用过程会先保存原始索引备份。</p></div>
+    </section>
+
+    <section id="page-settings" class="page hidden">
+      <div class="page-heading"><span class="eyebrow accent">LOCAL WORKSPACE</span><h1>工作区设置</h1><p>使用本机配置连接研究资料。游戏目录仅用于读取。</p></div>
+      <div class="two-columns"><article class="panel"><h2>当前工作区</h2><dl class="workspace-details"><dt>管理目录</dt><dd id="setting-root">—</dd><dt>本机配置</dt><dd id="setting-config">—</dd><dt>游戏数据来源 · 只读</dt><dd id="setting-game">—</dd><dt>快照时间</dt><dd id="setting-time">—</dd></dl><div class="form-note">切换管理目录时，以 <code>--root local/目录名</code> 重新启动本机界面服务。本版不提供游戏安装或启动按钮。</div></article>
+      <article class="panel" id="init-panel"><h2>初始化管理目录</h2><p class="muted">首次使用时，引用已有的本机流水线配置。</p><form id="init-form"><label>配置文件 · 项目 local 内<input name="config" required maxlength="2048" placeholder="local/pipeline-config.json"></label><button class="btn primary full" type="submit">初始化工作区</button></form><p class="form-footnote">配置模板位于 resources/pipeline-config.example.json。研究文件与个人路径留在 local，避免加入分发包。</p></article>
+      <article class="panel hidden" id="ready-panel"><div class="ready-symbol">✓</div><h2>工作区已连接</h2><p class="muted">候选登记、构建与副本恢复共用同一套管理核心。已有目录不会被重新初始化。</p><div class="capability-list"><span>✓ 项目内编译与打包</span><span>✓ 版本与字段冲突检查</span><span>✓ 备份与副本还原</span><span class="muted">○ 游戏加载与比赛效果待验证</span></div></article></div>
+    </section>
+
+    <section class="task-panel" id="task-panel"><div class="task-heading"><div><span id="task-indicator" class="task-indicator"></span><strong id="task-title">本次会话任务</strong><span id="task-summary" class="muted">尚无任务</span></div><button class="btn subtle" id="toggle-tasks" aria-expanded="false">展开记录 ↓</button></div><div id="task-live" class="task-live hidden" role="status"><span class="spinner"></span><span id="task-phase"></span><time id="task-elapsed"></time></div><div id="task-history" class="task-history hidden"></div></section>
+    <footer class="main-footer"><span>FC27 CAREER LAB <span class="footer-divider">/</span> 本地管理界面</span><span>离线检查通过 ≠ 游戏加载或比赛效果已验证</span></footer>
+  </main>
+
+  <dialog id="detail-dialog"><div class="dialog-head"><div><span class="eyebrow accent">CANDIDATE DETAILS</span><h2 id="detail-title">候选详情</h2></div><button class="icon-button close-dialog" aria-label="关闭详情">×</button></div><div id="detail-content"></div><div class="dialog-actions"><button class="btn outline" id="detail-check">离线预检</button><button class="btn primary" id="detail-rehearse">创建副本 →</button></div></dialog>
+  <dialog id="register-dialog"><div class="dialog-head"><div><span class="eyebrow accent">ADD TO LIBRARY</span><h2>登记已有候选</h2></div><button class="icon-button close-dialog" aria-label="关闭登记窗口">×</button></div><p class="muted">引用项目 local 中完整的编译、打包和加载副本目录；登记前会进行完整预检。</p><form id="register-form"><div class="two-columns compact"><label>候选名称<input name="title" required maxlength="120" placeholder="实验候选名称"></label><label>候选标识<input name="id" required maxlength="48" pattern="[a-z][a-z0-9-]{0,47}" placeholder="example-v1"></label></div><label>编译目录<input name="bundle" required maxlength="2048" placeholder="local/my-build"></label><label>原版资产导出目录<input name="export" required maxlength="2048" placeholder="local/my-export"></label><label>打包目录<input name="package" required maxlength="2048" placeholder="local/my-package"></label><label>加载副本目录<input name="stage" required maxlength="2048" placeholder="local/my-loader-stage"></label><button class="btn primary full" type="submit">预检并登记</button></form></dialog>
+  <div id="toast" class="toast hidden" role="status"></div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "game_root": "X:/Games/EA SPORTS FC 27",
+  "fc27_export": "local/research/2026-10-08/extracted/fc27-attrib-v3",
+  "sample": "local/research/2026-10-08/extracted/anth-files/main.fifamod",
+  "sdk": "local/research/2026-10-08/extracted/fet-sdk/FC26SDK.dll",
+  "shared_types": "local/research/2026-10-08/extracted/initfs-types-v2/Data/SharedTypeDescriptors.ebx",
+  "codec": "local/research/2026-10-08/tools/codec/oo2core_9_win64.dll",
+  "recipe": "resources/whole-match-study.json"
+}

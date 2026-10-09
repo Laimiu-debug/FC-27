@@ -1,0 +1,23 @@
+{
+  "format": "fc27-fixed-edit-plan-v1",
+  "export_manifest_sha256": "填写本机导出 manifest.json 的 SHA256",
+  "sdk_sha256": "填写名称 SDK 文件的 SHA256",
+  "shared_types_sha256": "填写本机共享类型文件的 SHA256",
+  "assets": [
+    {
+      "name": "fifa/attribulator/gameplay/groups/gp_cpuai/gp_cpuai_cpuaipredictionpoints_runtime",
+      "expected_sha256": "填写本机此资产的 SHA256",
+      "root_identity": {
+        "guid": "cc9b596b-9b2a-9a32-3884-c17918a3a010",
+        "signature": "636051d6"
+      },
+      "edits": [
+        {
+          "field": "PredictionPointMinMovementDelta[0]",
+          "expected_hex": "填写已核对的 Float32 原始位",
+          "value": 0.8
+        }
+      ]
+    }
+  ]
+}
