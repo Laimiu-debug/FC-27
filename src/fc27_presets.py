@@ -59,11 +59,15 @@ def validate_preset(value):
     for sha in value["source_hashes"].values():
         hash_text(sha)
     provenance = value["provenance"]
-    if set(provenance) != {"build_report_sha256", "sdk_sha256", "shared_types_sha256", "recipe_sha256",
+    if set(provenance) != {"build_report_sha256", "sdk_sha256", "shared_types_sha256", "recipe_sha256", "schema_source_hashes",
                            "runtime_schema_adaptation", "reference_is_modified_fc26"}:
         raise ValueError("预设研究来源不完整")
     for key in ("build_report_sha256", "sdk_sha256", "shared_types_sha256", "recipe_sha256"):
         hash_text(provenance[key])
+    if set(provenance["schema_source_hashes"]) != {"Data/initfs_Win32", "Patch/initfs_Win32"}:
+        raise ValueError("预设必须绑定两层共享类型来源")
+    for sha in provenance["schema_source_hashes"].values():
+        hash_text(sha)
     if provenance["runtime_schema_adaptation"] is not False or provenance["reference_is_modified_fc26"] is not True:
         raise ValueError("预设不能声称重新完成类型适配或前代原版对比")
     assets, names, edits = value["assets"], set(), 0
@@ -144,12 +148,12 @@ def version_check(game: Path, preset: dict) -> dict:
     no_links(game)
     game = game.resolve(strict=True)
     mismatches = []
-    for name, expected in preset["source_hashes"].items():
+    for name, expected in (preset["source_hashes"] | preset["provenance"]["schema_source_hashes"]).items():
         path = plain_path(game, name)
         if digest(small_file(path)) != expected:
             mismatches.append(name)
     return {"matched": not mismatches, "mismatched_files": sorted(mismatches),
-            "scope": "four-index-sha256", **UNVERIFIED}
+            "scope": "four-index-and-two-initfs-sha256", **UNVERIFIED}
 
 
 def apply_bound_asset(original: bytes, item: dict) -> tuple[bytes, dict]:
@@ -314,6 +318,7 @@ def prepare(project: Path, game: Path, module: str, preset: dict | None = None) 
               "output": destination.relative_to(project).as_posix(), "assets_built": summary["assets_built"],
               "changed_values": summary["changed_values"], "changed_bytes": summary["changed_bytes"],
               "preset_sha256": digest(json_bytes(preset)), "source_hashes": preset["source_hashes"],
+              "schema_source_hashes": preset["provenance"]["schema_source_hashes"],
               "offline_mount_verified": checked["offline_mount_verified"], "prepared": True,
               "installed": False, "enabled": False, **UNVERIFIED}
     write_new(destination / "preset-result.json", json_bytes(result))

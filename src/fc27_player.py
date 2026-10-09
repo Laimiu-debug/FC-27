@@ -66,8 +66,10 @@ def snapshot(project: Path, detected: list[str], preferred: str = "") -> dict:
                 if not report_path.exists():
                     continue
                 value = decode_json(read_bytes(report_path, 16384))
+                if value.get("preset_sha256") != digest(json_bytes(preset)):
+                    # 旧预设完成记录保留在磁盘，不阻止使用更新后的内置预设。
+                    continue
                 if (value.get("format") != "fc27-preset-prepared-v1" or value.get("prepared") is not True
-                        or value.get("preset_sha256") != digest(json_bytes(preset))
                         or value.get("source_hashes") != preset["source_hashes"]
                         or value.get("output") != path.relative_to(project.resolve()).as_posix()
                         or value.get("enabled") is not False or value.get("installed") is not False

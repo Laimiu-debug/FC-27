@@ -13,6 +13,10 @@
     "sdk_sha256": "0462a9801210599373e2b881771638ddcf1c1873a13a6157000676948fbe065b",
     "shared_types_sha256": "25566c8b8f2e997d16d561ee1f1187491194be39c6b8cc7522b2766ddd0bd2b3",
     "recipe_sha256": "3f552d70a6b7476763364cde50fa4f453334c61701325c5f38d5d35a5c8ceff4",
+    "schema_source_hashes": {
+      "Data/initfs_Win32": "0f41a984a418138639cf801065849be822c4fccaf184b2665769e3bb23e97fd4",
+      "Patch/initfs_Win32": "8c85af1e009495ed5ffdc235fda99f99e1580016f29365bd607142ef6bb676d0"
+    },
     "runtime_schema_adaptation": false,
     "reference_is_modified_fc26": true
   },

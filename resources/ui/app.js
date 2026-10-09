@@ -92,7 +92,7 @@ function updateControls() {
 function renderPlayer() {
   const player = data.player;
   $("#player-status").textContent = "未启用 · 加载适配未完成";
-  $("#player-game-status").textContent = player.game_detected ? (player.version_matched ? "已识别游戏，索引版本与内置预设一致" : "已识别游戏，预设版本不匹配") : "尚未识别到游戏";
+  $("#player-game-status").textContent = player.game_detected ? (player.version_matched ? "已识别游戏，索引与类型来源和预设一致" : "已识别游戏，预设版本不匹配") : "尚未识别到游戏";
   $("#player-game-path").textContent = player.game_root || "可选择游戏安装位置";
   $("#player-error").textContent = player.error || "";
   $("#player-message").textContent = player.message;

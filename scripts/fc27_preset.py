@@ -12,7 +12,7 @@ from fc27_management import UNVERIFIED, decode_json, json_bytes, read_bytes, wri
 from fc27_presets import MAX_PRESET, digest, prepare, validate_preset
 
 
-def create(bundle: Path, manifest: Path, recipe: Path, output: Path):
+def create(bundle: Path, manifest: Path, recipe: Path, output: Path, shared_manifest: Path):
     import fc27_build as build
     from fc27_verify_build import run as verify_build
     from fc27_setup import no_links
@@ -27,6 +27,16 @@ def create(bundle: Path, manifest: Path, recipe: Path, output: Path):
         bundle / "build-report.json", manifest, recipe))
     report, exported, recipe = map(decode_json, (report_raw, manifest_raw, recipe_raw))
     summary = report["summary"]
+    shared = decode_json(read_bytes(shared_manifest, 1024 * 1024))
+    layers = shared.get("files", [])
+    if len(layers) != 2 or {layer["layer"] for layer in layers} != {"Data", "Patch"}:
+        raise ValueError("共享类型来源须同时绑定 Data/Patch")
+    if any(layer.get("outer_roundtrip_verified") is not True or layer.get("inner_roundtrip_verified") is not True for layer in layers):
+        raise ValueError("共享类型来源未完成封装往返校验")
+    matches = [item for layer in layers for item in layer.get("files", [])
+               if item.get("sha256") == summary["shared_types_sha256"]]
+    if len(matches) != 1:
+        raise ValueError("共享类型来源与编译的类型表不同")
     if summary["export_manifest_sha256"] != digest(manifest_raw) or summary["source_hashes"] != exported["source_hashes"]:
         raise ValueError("预设研究来源的导出与编译绑定不符")
     records = {item["name"]: item for item in exported["assets"]}
@@ -44,6 +54,7 @@ def create(bundle: Path, manifest: Path, recipe: Path, output: Path):
               "title": "整场比赛研究方案", "source_hashes": summary["source_hashes"],
               "provenance": {"build_report_sha256": digest(report_raw), "sdk_sha256": summary["sdk_sha256"],
                              "shared_types_sha256": summary["shared_types_sha256"], "recipe_sha256": digest(recipe_raw),
+                             "schema_source_hashes": {layer["layer"] + "/initfs_Win32": layer["source_sha256"] for layer in layers},
                              "runtime_schema_adaptation": False, "reference_is_modified_fc26": True},
               "modules": [{"id": m["id"], "title": m["title"], "assets": [a["name"] for a in m["assets"]]}
                           for m in recipe["modules"]], "assets": assets, "safety": dict(UNVERIFIED)}
@@ -60,14 +71,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     creator = sub.add_parser("create")
-    for name in ("bundle", "manifest", "recipe", "output"):
+    for name in ("bundle", "manifest", "recipe", "output", "shared-manifest"):
         creator.add_argument("--" + name, required=True, type=Path)
     builder = sub.add_parser("prepare")
     builder.add_argument("--game-root", type=Path, required=True)
     builder.add_argument("--module", default="all")
     args = parser.parse_args()
     try:
-        value = create(args.bundle, args.manifest, args.recipe, args.output) if args.command == "create" else prepare(
+        value = create(args.bundle, args.manifest, args.recipe, args.output, args.shared_manifest) if args.command == "create" else prepare(
             project_root(), args.game_root, args.module)
         print(json_bytes(value).decode("utf-8"))
         return 0

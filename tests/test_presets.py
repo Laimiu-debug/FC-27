@@ -32,7 +32,16 @@ def fixture(root):
     recipe.write_bytes(json_bytes({"modules": [{"id": "role_execution", "title": "角色执行",
         "assets": [{"name": a["resource"]} for a in report["assets"]]}]}))
     preset_file = root / "local/preset.json"
-    GENERATOR.create(built, exported / "manifest.json", recipe, preset_file)
+    schema_manifest = root / "local/schema-manifest.json"
+    layers = []
+    for layer in ("Data", "Patch"):
+        raw = ("synthetic initfs " + layer).encode()
+        (game / layer / "initfs_Win32").write_bytes(raw)
+        layers.append({"layer": layer, "source_sha256": hashlib.sha256(raw).hexdigest(),
+                       "outer_roundtrip_verified": True, "inner_roundtrip_verified": True,
+                       "files": [{"sha256": report["summary"]["shared_types_sha256"]}] if layer == "Data" else []})
+    schema_manifest.write_bytes(json_bytes({"files": layers}))
+    GENERATOR.create(built, exported / "manifest.json", recipe, preset_file, schema_manifest)
     return game, built, json.loads(preset_file.read_bytes())
 
 
@@ -68,6 +77,12 @@ class PresetTests(unittest.TestCase):
                 self.assertTrue(value["can_prepare"])
                 self.assertIsNotNone(value["last_prepared"])
                 self.assertFalse(value["can_enable"])
+                updated = copy.deepcopy(preset)
+                updated["provenance"]["recipe_sha256"] = "ff" * 32
+                with patch.object(PLAYER, "load_preset", return_value=updated):
+                    after_update = PLAYER.snapshot(root, [str(game)])
+                self.assertTrue(after_update["can_prepare"])
+                self.assertIsNone(after_update["last_prepared"])
 
     def test_updated_game_rejected_before_dependency_or_output_creation(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -92,6 +107,18 @@ class PresetTests(unittest.TestCase):
                 changed[-1] ^= 1
                 with self.assertRaisesRegex(ValueError, "拒绝按旧偏移"):
                     PRESETS.apply_bound_asset(bytes(changed), item)
+
+    def test_shared_type_source_update_rejected_even_with_identical_indices(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            with patch.object(BUILD, "PROJECT_ROOT", root), patch("fc27_export.PROJECT_ROOT", root):
+                game, _, preset = fixture(root)
+                (game / "Patch/initfs_Win32").write_bytes(b"updated type source")
+                checked = PRESETS.version_check(game, preset)
+                self.assertEqual(checked["mismatched_files"], ["Patch/initfs_Win32"])
+                with self.assertRaisesRegex(ValueError, "游戏已更新"):
+                    PRESETS.prepare(root, game, "all", preset)
+                self.assertFalse((root / "local/preset-builds").exists())
 
     def test_overlaps_nonfinite_values_and_false_capabilities_rejected(self):
         original = PRESETS.load_preset()
